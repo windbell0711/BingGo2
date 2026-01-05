@@ -1,2 +1,3 @@
-# BingGo2
-Bingo! The magical integration with Chinese chess and International chess. Let's see.
+# BingGo 2
+
+A completely rewritten version of BingGo.
