@@ -26,6 +26,7 @@ class Beach:
             else:
                 self.beach.append(c2p[char])
         self.fen = fen
+        self.initial_fen = fen
         self.eng = fsf.BinggoEngine()
 
     def __getitem__(self, item):
@@ -86,6 +87,9 @@ class Beach:
                 res.add(fsf2beach(move[2:4]))
         return res
 
+    def moves_reset(self,moves:list):
+        self.fen = self.eng.perform_move(self.initial_fen, moves)
+        self.fen2beach(self.fen)
     
     def suicide(self):
         self.eng.close()
