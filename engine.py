@@ -1,6 +1,22 @@
 import subprocess
 import time
 
+BOARD_FILES = 'abcdefghi'
+BOARD_RANKS = '123456789'
+PIECE_TYPS_LOWER = 'rnbkqpoacmxswj'
+PIECE_TYPS_LOWER_PROMOTED_ONLY = 'j'
+
+def is_pgn(move: str) -> bool:
+    """检查走法格式是否符合pgn格式"""
+    if len(move) == 5:
+        if move[4] not in PIECE_TYPS_LOWER_PROMOTED_ONLY:
+            return False
+    elif len(move) != 4:
+        return False
+    return (move[0] in BOARD_FILES and move[2] in BOARD_FILES and
+            move[1] in BOARD_RANKS and move[3] in BOARD_RANKS)
+
+
 class BinggoEngine:
     def __init__(self, engine_path="fairy-stockfish-largeboard_x86-64-bmi2.exe"):
         """
@@ -67,9 +83,7 @@ class BinggoEngine:
         return None
     
     def _display_board(self) -> None:
-        """
-        显示当前棋盘状态
-        """
+        """输出并显示当前棋盘状态"""
         self._send_command("d")
         
         # 读取棋盘显示
@@ -88,19 +102,34 @@ class BinggoEngine:
             if line.strip():  # 跳过空行
                 print(line.strip())
     
-    def perform_move(self, fen: str, move: str) -> str:
+    def _d(self) -> None:
+        """调试用，显示当前棋盘状态"""
+        self._display_board()
+    
+    def perform_move(self, fen: str, move: str | list[str]) -> str:
         """
         根据给定的FEN和走法，返回新的FEN
-        
-        参数:
-        fen: 起始局面的FEN字符串
-        move: 要执行的走法（如"e2e4"）
-        
-        返回:
-        new_fen: 执行走法后的新FEN
+        :param fen:  起始局面的FEN字符串
+        :param move: 要执行的走法（如"e2e4"）
+        :return:     执行走法后的新FEN
         """
+        # 处理输入
+        if isinstance(move, list):
+            moves = ""
+            for m in move:
+                if is_pgn(m):
+                    moves += m + " "
+                else: raise ValueError(f"Warning: Invalid PGN move: {m}")
+            moves = moves.strip()
+        elif isinstance(move, str):
+            if not is_pgn(move):
+                raise ValueError(f"Warning: Invalid PGN move: {move}")
+            moves = move
+        else:
+            raise TypeError("move must be str or list[str]")
+        
         # 设置局面并执行走法
-        self._send_command(f"position fen {fen} moves {move}")
+        self._send_command(f"position fen {fen} moves {moves}")
         self._send_command("d")
         
         # 读取棋盘显示
@@ -120,10 +149,10 @@ class BinggoEngine:
         
         if new_fen:
             # 打印走法信息
-            print(f"Move: {move}")
+            print(f"Move: {moves}")
             return new_fen
         else:
-            print(f"Warning: Could not extract FEN after move {move}")
+            print(f"Warning: Could not extract FEN after move {moves}")
             return fen
     
     def pms(self, fen: str) -> list[str]:
@@ -208,59 +237,50 @@ class BinggoEngine:
         return best_move, new_fen
     
     def analyze(self, fen: str, think_time=2000) -> dict:
-        """
-        分析局面并返回包含详细信息的字典
+        raise NotImplementedError("The analyze method is currently disabled.")
+        # self._send_command(f"position fen {fen}")
+        # self._send_command(f"go movetime {think_time}")
         
-        参数:
-        fen: FEN字符串
-        think_time: 思考时间(毫秒)
+        # analysis = {
+        #     "fen": fen,
+        #     "best_move": None,
+        #     "evaluation": None,
+        #     "depth": None,
+        #     "nodes": None,
+        #     "pv": []  # 主要变例
+        # }
         
-        返回:
-        包含分析结果的字典
-        """
-        self._send_command(f"position fen {fen}")
-        self._send_command(f"go movetime {think_time}")
-        
-        analysis = {
-            "fen": fen,
-            "best_move": None,
-            "evaluation": None,
-            "depth": None,
-            "nodes": None,
-            "pv": []  # 主要变例
-        }
-        
-        while True:
-            line = self._readline()
-            if not line:
-                continue
+        # while True:
+        #     line = self._readline()
+        #     if not line:
+        #         continue
             
-            # 解析思考信息
-            if "info" in line and "depth" in line:
-                parts = line.split()
-                for i, part in enumerate(parts):
-                    if part == "depth" and i + 1 < len(parts):
-                        analysis["depth"] = parts[i + 1]
-                    elif part == "nodes" and i + 1 < len(parts):
-                        analysis["nodes"] = parts[i + 1]
-                    elif part == "score" and i + 1 < len(parts):
-                        analysis["evaluation"] = parts[i + 2] if i + 2 < len(parts) else parts[i + 1]
-                    elif part == "pv" and i + 1 < len(parts):
-                        analysis["pv"] = parts[i + 1:]
+        #     # 解析思考信息
+        #     if "info" in line and "depth" in line:
+        #         parts = line.split()
+        #         for i, part in enumerate(parts):
+        #             if part == "depth" and i + 1 < len(parts):
+        #                 analysis["depth"] = parts[i + 1]
+        #             elif part == "nodes" and i + 1 < len(parts):
+        #                 analysis["nodes"] = parts[i + 1]
+        #             elif part == "score" and i + 1 < len(parts):
+        #                 analysis["evaluation"] = parts[i + 2] if i + 2 < len(parts) else parts[i + 1]
+        #             elif part == "pv" and i + 1 < len(parts):
+        #                 analysis["pv"] = parts[i + 1:]
             
-            # 解析最佳走法
-            if "bestmove" in line:
-                parts = line.strip().split()
-                if len(parts) > 1 and parts[1] != "(none)":
-                    analysis["best_move"] = parts[1]
-                break
+        #     # 解析最佳走法
+        #     if "bestmove" in line:
+        #         parts = line.strip().split()
+        #         if len(parts) > 1 and parts[1] != "(none)":
+        #             analysis["best_move"] = parts[1]
+        #         break
         
-        # 获取执行走法后的新FEN
-        if analysis["best_move"]:
-            best_move, new_fen = self.best_move(fen, think_time)
-            analysis["new_fen"] = new_fen
+        # # 获取执行走法后的新FEN
+        # if analysis["best_move"]:
+        #     best_move, new_fen = self.best_move(fen, think_time)
+        #     analysis["new_fen"] = new_fen
         
-        return analysis
+        # return analysis
     
     def close(self) -> None:
         """关闭引擎"""
@@ -275,34 +295,23 @@ if __name__ == "__main__":
     eng = BinggoEngine()
     
     ori_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
-    my_fen = "r2k4r/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC b kq - 0 1"
+    # my_fen = "r2k4r/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC b kq - 0 1"
     
     # best_move, new_fen = eng.best_move(my_fen, think_time=2000)
     # print(f"{best_move=}")
     # print(f"{new_fen=}")
 
-    for i in eng.pms(my_fen):
-        if "d9" in i:
-            print(i)
+    # for i in eng.pms(my_fen):
+    #     if "d9" in i:
+    #         print(i)
 
-    # Perform Move a1a2
-    print(eng.perform_move(my_fen, "d9b9"))
-    print(eng._display_board())
+    # # Perform Move a1a2
+    # print(eng.perform_move(my_fen, "d9b9"))
+    # print(eng._display_board())
 
-    # eng._send_command(f"d")
-    # print("\nCurrent position:")
-    # for _ in range(25):  # Read board display
-    #     line = eng.engine.stdout.readline() # type: ignore
-    #     if "Key" in line:
-    #         break
-    #     print(line.strip())
-
-
-    # eng._send_command(f"go perft 1")
-    # while True:
-    #     line = eng.engine.stdout.readline()
-    #     print(line.strip())
-    #     if "Nodes searched:" in line:
-    #         break
+    print(eng.perform_move(ori_fen, "e4e5"))
+    print(eng._d())
+    print(eng.perform_move(ori_fen, ["e4e5", "d9e9", "a1a2"]))
+    print(eng._d())
 
     eng.close()
