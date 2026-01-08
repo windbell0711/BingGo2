@@ -72,10 +72,6 @@ class Beach:
         move = self.eng.best_move(self.fen, think_time=think_time)[0]
         return move
 
-    def apply_move(self, move):
-        self.fen = self.eng.perform_move(self.fen, move)
-        self.fen2beach(self.fen)
-
     def get_pms(self, p = None):
         all_pms = self.eng.pms(self.fen)
         if p is None:
@@ -93,14 +89,3 @@ class Beach:
     
     def suicide(self):
         self.eng.close()
-
-
-if __name__ == '__main__':
-    board = Beach()
-    print(board.fen)
-    board.apply_move('e1e2')
-    board.apply_move('a8a6')
-    board.apply_move('e2e1')
-    board.apply_move('a9a7')
-    print(board.fen)
-    board.suicide()
