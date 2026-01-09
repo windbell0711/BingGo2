@@ -18,7 +18,7 @@ def is_pgn(move: str) -> bool:
 
 
 class BinggoEngine:
-    def __init__(self, engine_path="fairy-stockfish-largeboard_x86-64-bmi2.exe"):
+    def __init__(self, engine_path="fairy-stockfish-largeboards_x86-64-bmi2-latest.exe"):  # 沿用BingGo beta 1.2使用的引擎，否则Pawn出现意外错误
         """
         初始化引擎
         engine_path: 引擎可执行文件路径
@@ -37,6 +37,7 @@ class BinggoEngine:
         
         # 初始化引擎
         INI_FILE_NAME = "binggo.ini"
+
         self._send_command("uci")
         self._send_command(f"setoption name VariantPath value {INI_FILE_NAME}")
         self._send_command("setoption name UCI_Variant value binggo")
@@ -295,23 +296,23 @@ if __name__ == "__main__":
     eng = BinggoEngine()
     
     ori_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
-    # my_fen = "r2k4r/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC b kq - 0 1"
+    my_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OpOOOOO1O/p8/1O7/4W4 b kq - 0 1"
     
     # best_move, new_fen = eng.best_move(my_fen, think_time=2000)
     # print(f"{best_move=}")
     # print(f"{new_fen=}")
 
-    # for i in eng.pms(my_fen):
-    #     if "d9" in i:
-    #         print(i)
+    for i in eng.pms(my_fen):
+        if "a3" in i:
+            print(i)
 
     # # Perform Move a1a2
     # print(eng.perform_move(my_fen, "d9b9"))
     # print(eng._display_board())
 
-    print(eng.perform_move(ori_fen, "e4e5"))
-    print(eng._d())
-    print(eng.perform_move(ori_fen, ["e4e5", "d9e9", "a1a2"]))
+    # print(eng.perform_move(ori_fen, "e4e5"))
+    # print(eng._d())
+    # print(eng.perform_move(ori_fen, ["e4e5", "d9e9", "a1a2"]))
     print(eng._d())
 
     eng.close()
