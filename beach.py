@@ -1,3 +1,5 @@
+import time
+
 import engine as fsf
 
 c2p = {'J':0,'C':1,'M':2,'X':3,'S':4,'A':5,'W':6,'O':7,'r':8,'b':9,'n':10,'q':11,'k':12,'p':13}
@@ -6,7 +8,9 @@ p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q'
 a2n = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7,'i':8}
 n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
 
-initial_fen = 'rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1'
+initial_fen = 'rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1'
+# initial_fen = '3k5/C8/8C/9/9/9/9/1p7/5W3 w kq - 0 1'
+
 
 def fsf2beach(p):
     return a2n[p[0]] + (9 - int(p[1])) * 9
@@ -48,13 +52,7 @@ class Beach:
                 self.beach.append(c2p[char])
 
     def beach2fen(self):
-        pieces = ''; n = 0; lc = 0; cas=''
-        if self.beach[3] == 12 and self.beach[8] == 8:
-            cas += 'k'
-        if self.beach[3] == 12 and self.beach[0] == 8:
-            cas += 'q'
-        if cas == '':
-            cas = '-'
+        pieces = ''; n = 0; lc = 0
         for num in self.beach:
             lc += 1
             if num < 0:
@@ -65,11 +63,25 @@ class Beach:
             elif num >= 0:
                 pieces += str(n) + p2c[num] if n > 0 else p2c[num]
                 n = 0
-        self.fen = pieces[:-1] + f' w {cas} - 0 1'
+        self.fen = pieces[:-1] + f' w kq - 0 1'
+
+    def reset(self, fen = None):
+        if fen is None:
+            self.fen = self.initial_fen
+        else:
+            self.fen = self.initial_fen = fen
+        try:
+            self.fen2beach(self.fen)
+        except:
+            self.reset(initial_fen)
 
     def get_best_move(self, think_time = 2000):
         """ 当前局面引擎解法 """
+        st = time.time()
         move = self.eng.best_move(self.fen, think_time=think_time)[0]
+        _t = time.time() - st
+        if _t < 200:
+            time.sleep(0.2)
         return move
 
     def get_pms(self, p = None):

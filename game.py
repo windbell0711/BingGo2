@@ -1,6 +1,8 @@
 import beach
 from threading import Thread
 
+ANIM_SPEED = 1
+
 class Game:
     def __init__(self):
         self.board = beach.Beach()
@@ -126,8 +128,8 @@ class Game:
         if self.state == 'play' or self.state == 'waits':
             self.UIs.add((91, '!'))
             self.UIs.add((96, '&'))
-            self.UIs.add((98, '<'))
-            self.UIs.add((99, '>'))
+            self.UIs.add((98, 'undo'))
+            self.UIs.add((99, 'gret'))
         if self.state == 'play' or self.state == 'wait' or self.state == 'waits':
             if self.board_is_flipped:
                 self.UIs.add((89, 'r' if self.ai_int else 'h'))
@@ -212,7 +214,7 @@ class Game:
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
     def undo(self, steps=1):
-        if self.move_step > 0:
+        if self.move_step >= steps:
             self.reset_special_pieces_show()
             self.move_step -= steps
             self.board.moves_reset(self.moves[:self.move_step])
@@ -221,16 +223,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10, eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//ANIM_SPEED,eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((2, 2, 0, 10, 8))
-                self.piece_animations.append((2, 0, -10, 10, 8))
+                self.piece_animations.append((2, 2, 0, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((2, 0, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((4, 4, 0, 10, 8))
-                self.piece_animations.append((4, 8, -10, 10, 8))
+                self.piece_animations.append((4, 4, 0, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((4, 8, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((tp, fp, 0, 10, piece_typ))
+                self.piece_animations.append((tp, fp, 0, 10//ANIM_SPEED, piece_typ))
 
     def gret(self):
         if self.move_step < len(self.moves):
@@ -240,16 +242,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10, eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//ANIM_SPEED, eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((0, 0, 0, 10, 8))
-                self.piece_animations.append((0, 2, -10, 10, 8))
+                self.piece_animations.append((0, 0, 0, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((0, 2, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((8, 8, 0, 10, 8))
-                self.piece_animations.append((8, 4, -10, 10, 8))
+                self.piece_animations.append((8, 8, 0, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((8, 4, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((fp, tp, 0, 10, piece_typ))
+                self.piece_animations.append((fp, tp, 0, 10//ANIM_SPEED, piece_typ))
             self.move_step += 1
             self.board.moves_reset(self.moves[:self.move_step])
 

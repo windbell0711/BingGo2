@@ -10,7 +10,6 @@ import game as gm
 ## TEMP!!!
 n2c = {1:'车',2:'马',3:'相',4:'士',5:'炮',6:'帅',7:'卒',8:'城',9:'教',10:'骑',11:'后',12:'王',13:'兵',14:'#'}
 FONT = '华文隶书'
-TRANSP = (255,0,255,100)
 
 def get_grid_position(x, y, square_x, square_y, square_size, grid_size=11):
     """计算鼠标点击在网格中的位置"""
@@ -24,7 +23,7 @@ def get_grid_position(x, y, square_x, square_y, square_size, grid_size=11):
     row = int(relative_y // cell_size)
     col = min(max(col, 0), grid_size - 1)
     row = min(max(row, 0), grid_size - 1)
-    return row, col
+    return int(row), int(col)
 
 def poses2beach_p(mouse_x, mouse_y, square_x, square_y, square_size):
     row, col = get_grid_position(mouse_x, mouse_y, square_x, square_y, square_size)
@@ -50,17 +49,31 @@ def play():
     cell_size = square_size / 11
     # line_w = int(cell_size / 20)
     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+    size_adjust_rate = 1
+    MAX_SCREEN_PIXEL = 3000
 
-    background_and_board = pygame.Surface((width, height), pygame.SRCALPHA)
-    pieces = pygame.Surface((width, height), pygame.SRCALPHA)
+    def adjust_max_pixel():
+        nonlocal width, height, square_size, square_x, square_y, cell_size, size_adjust_rate
+        if width > MAX_SCREEN_PIXEL or height > MAX_SCREEN_PIXEL:
+            size_adjust_rate = min(MAX_SCREEN_PIXEL/width, MAX_SCREEN_PIXEL/height)
+            width *= size_adjust_rate
+            height *= size_adjust_rate
+            square_size *= size_adjust_rate
+            square_x *= size_adjust_rate
+            square_y *= size_adjust_rate
+            cell_size *= size_adjust_rate
+        else:
+            size_adjust_rate = 1
+
+    adjust_max_pixel()
 
     flipped = False
-    steady = set()
-    animations = []
-    last_choice = (-1, -1)
-    paths = set()
-    UIs = set()
-    pressed = (-1, 0)
+    # steady = set()
+    # animations = []
+    # last_choice = (-1, -1)
+    # paths = set()
+    # UIs = set()
+    # pressed = (-1, 0)
 
     def reset_all_elements():
         nonlocal flipped, steady, animations, last_choice, paths, UIs, pressed
@@ -81,7 +94,8 @@ def play():
 
     board_image_original = pygame.image.load('imgs/board.png').convert_alpha()
 
-    all_piece_img_names = ['empty_piece','shadow']
+    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r','pressed','dot']
+
     name2piece_original_surface = {}
     name2piece_surface = {}
     for name in all_piece_img_names:
@@ -95,14 +109,15 @@ def play():
             text_surface = font.render(n2c[typ], True, (20, 20, 20) if typ > 7 else (137, 57, 37))
             tmps.blit(text_surface,(110,110))
             name2piece_original_surface[name] = tmps
-
-    font = pygame.font.SysFont(FONT, int(cell_size))
-    background_and_board = board_image = background_image = pygame.Surface((0,0))
+    background_and_board = board_image = background_image = pieces = small_screen = pygame.Surface((0,0))
 
     def reset_all_imgs():
-        nonlocal background_and_board, pieces, board_image, font, background_and_board, background_image
+        nonlocal background_and_board, pieces, board_image, font, \
+            background_and_board, background_image, small_screen, pieces, width, height
+        small_screen = pygame.Surface((width, height), pygame.SRCALPHA)
         background_and_board = pygame.Surface((width, height), pygame.SRCALPHA)
         pieces = pygame.Surface((width, height), pygame.SRCALPHA)
+        print(width,height)
         # 此处包含贴图大小调整
         if width > height * 1.5:
             background_image = pygame.transform.scale(background_image_original, (width, width / 1.5))
@@ -133,19 +148,25 @@ def play():
                 square_y = (height - square_size) // 2
                 cell_size = square_size / 11
                 # line_w = int(cell_size / 20)
+                # MAX_SCREEN_PIXEL = screen.get_width() // 2
+                adjust_max_pixel()
                 reset_all_imgs()
                 reset_all_elements()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
-                    square_size = min(width, height)
-                    square_x = (width - square_size) // 2
-                    square_y = (height - square_size) // 2
-                    number = poses2beach_p(mouse_x, mouse_y, square_x, square_y, square_size)
+                    number = poses2beach_p(mouse_x*size_adjust_rate, mouse_y*size_adjust_rate, square_x, square_y, square_size)
+
+
+        # TODO: temp 显示棋谱
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_p]:
+            print(game.board.fen, game.moves)
+
 
         st = time.time()
-        last_flip, last_steady, last_animations, last_choice, last_paths, last_last_UIs, last_pressed = flipped, steady, animations, last_choice, paths, UIs, pressed
+        last_flip = flipped
         flipped, steady, animations, last_choice, paths, UIs, pressed = game.handle_input_p(number)
 
         pieces.fill((0,0,0,0))
@@ -208,29 +229,40 @@ def play():
             if flipped:
                 p = 80-p
             #!
-            text_surface = font.render('·', True, (200, 200, 200))
+            text_surface = name2piece_surface['dot']
             pieces.blit(text_surface,(square_x + p % 9 * cell_size + cell_size, square_y + p // 9 * cell_size + cell_size))
         #UI
         for p, rule in UIs:
             #!
-            text_surface = font.render(rule, True, (200, 200, 200))
+            # text_surface = font.render(rule, True, (200, 200, 200))
+            try:
+                text_surface = name2piece_surface[rule]
+            except ValueError:
+                continue
             if p//10 == 8:
-                pieces.blit(text_surface,(square_x,square_y + p%10 * cell_size))
+                pieces.blit(text_surface,(square_x - cell_size*0.2, square_y + p%10 * cell_size))
             elif p//10 == 9:
-                pieces.blit(text_surface,(square_x + cell_size*10,square_y + p%10 * cell_size))
+                pieces.blit(text_surface,(square_x + cell_size*10.2,square_y + p%10 * cell_size))
         #UI按下的效果
         if pressed[-1] > 0:
             p = pressed[0]
             #!
-            text_surface = font.render('|', True, (200, 200, 200))
+            text_surface = name2piece_surface['pressed']
             if p // 10 == 8:
-                pieces.blit(text_surface, (square_x, square_y + p % 10 * cell_size))
+                pieces.blit(text_surface, (square_x - cell_size*0.2, square_y + p % 10 * cell_size))
             elif p // 10 == 9:
-                pieces.blit(text_surface, (square_x + cell_size * 10, square_y + p % 10 * cell_size))
+                pieces.blit(text_surface, (square_x + cell_size * 10.2, square_y + p % 10 * cell_size))
+
 
         screen.fill((0,0,0))
-        screen.blit(background_and_board,(0,0))
-        screen.blit(pieces,(0,0))
+        if size_adjust_rate != 1:
+            small_screen.fill((0, 0, 0))
+            small_screen.blit(background_and_board, (0, 0))
+            small_screen.blit(pieces, (0, 0))
+            screen.blit(pygame.transform.scale(small_screen,screen.get_size()),(0,0))
+        else:
+            screen.blit(background_and_board, (0, 0))
+            screen.blit(pieces,(0,0))
 
         if time.time()-st>0.01:
             print(time.time()-st)
