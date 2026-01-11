@@ -171,25 +171,25 @@ class Game:
             # 添加动画 并且更新 beach 状态
             fp = self.last_choice_piece[0]
             move = beach.beach2fsf(fp) + beach.beach2fsf(beach_p)
-            self.reset_special_pieces_show()
             tp = beach_p
             # 如果走子是升变
             if self.board[fp] == 13 and tp//9 == 8:
                 self.state = 'promotion'
+                self.highlight_paths.clear()
                 self.promotion_move = move
-
-                self.piece_animations.append((tp, tp, -1, 1, 14))
-                self.piece_animations.append((tp - 9, tp - 9, -1, 1, 14))
-                self.piece_animations.append((tp - 18, tp - 18, -1, 1, 14))
-                self.piece_animations.append((tp - 27, tp - 27, -1, 1, 14))
-                self.piece_animations.append((tp, tp, -1, 1, 11))
-                self.piece_animations.append((tp - 9, tp - 9, -1, 1, 10))
-                self.piece_animations.append((tp - 18, tp - 18, -1, 1, 9))
-                self.piece_animations.append((tp - 27, tp - 27, -1, 1, 8))
+                self.piece_animations.append((-1, tp, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 9, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 18, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 27, -1, 1, 14))
+                self.piece_animations.append((-1, tp, -1, 1, 11))
+                self.piece_animations.append((-1, tp - 9, -1, 1, 10))
+                self.piece_animations.append((-1, tp - 18, -1, 1, 9))
+                self.piece_animations.append((-1, tp - 27, -1, 1, 8))
                 return
             # 中国象棋的升变
             # elif self.board[fp] == 7 and tp//9 == 0:
             #     move += 'j'
+            self.reset_special_pieces_show()
             self.apply_move(move)
             return
         # 如果没选子或选了一样的，直接重置
@@ -205,13 +205,9 @@ class Game:
                 if self.board_is_flipped:
                     self.piece_animations.append((p - 0.15, p, 0, 3, typ))
                     self.piece_animations.append((p, p - 0.15, -3, 3, typ))
-                    self.piece_animations.append((p - 0.15, p, -6, 3, typ))
-                    self.piece_animations.append((p, p - 0.15, -9, 3, typ))
                 else:
                     self.piece_animations.append((p + 0.15, p, 0, 3, typ))
                     self.piece_animations.append((p, p + 0.15, -3, 3, typ))
-                    self.piece_animations.append((p + 0.15, p, -6, 3, typ))
-                    self.piece_animations.append((p, p + 0.15, -9, 3, typ))
             return
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
