@@ -1,0 +1,132 @@
+>> 
+>> d
+<< 
+<<  +---+---+---+---+---+---+---+---+---+
+<<  | r | n | b | k |   | q | n | b | r |9  
+<<  +---+---+---+---+---+---+---+---+---+
+<<  | p | p | p | p |   | p | p | p | p |8
+<<  +---+---+---+---+---+---+---+---+---+
+<<  |   |   |   |   |   |   |   |   |   |7
+<<  +---+---+---+---+---+---+---+---+---+
+<<  |   |   |   |   |   |   |   |   |   |6
+<<  +---+---+---+---+---+---+---+---+---+
+<<  |   |   |   |   |   |   |   |   |   |5
+<<  +---+---+---+---+---+---+---+---+---+
+<<  | O | O | O |   | O |   | O | O | O |4
+<<  +---+---+---+---+---+---+---+---+---+
+<<  |   | A |   |   |   |   |   | A |   |3
+<<  +---+---+---+---+---+---+---+---+---+
+<<  |   |   |   |   |   |   |   |   |   |2
+<<  +---+---+---+---+---+---+---+---+---+
+<<  | C | M | X | S | W | S | X | M | C |1 *
+<<  +---+---+---+---+---+---+---+---+---+
+<<    a   b   c   d   e   f   g   h   i
+<< 
+<< Fen: rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1
+<< Sfen: rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC b - 1
+<< Key: 2EC984C0694BE508
+<< Checkers: 
+<< Chased: 
+>> setoption name Debug Log File value true
+>> setoption name Debug Log File value on
+>> 
+>> 
+>> go movetime 1000
+<< info string classical evaluation enabled
+<< info depth 1 seldepth 1 multipv 1 score cp 1023 nodes 74 nps 6727 tbhits 0 time 11 pv b3d3 f9d7
+<< info depth 2 seldepth 2 multipv 1 score cp 1023 nodes 428 nps 26750 tbhits 0 time 16 pv b3d3 f9d7
+<< info depth 3 seldepth 3 multipv 1 score cp 1023 nodes 580 nps 32222 tbhits 0 time 18 pv b3d3 f9d7 h3h8
+<< info depth 4 seldepth 4 multipv 1 score cp 1107 nodes 649 nps 34157 tbhits 0 time 19 pv b3d3 f9d7 h3h8
+<< info depth 5 seldepth 5 multipv 1 score cp 1035 nodes 2273 nps 90920 tbhits 0 time 25 pv b3d3 f9d7 h3h8 f8f7 d1e2
+<< info depth 6 seldepth 7 multipv 1 score cp 908 nodes 13720 nps 201764 tbhits 0 time 68 pv f1e2 g9f7 b3d3 f9d7 b1c3 b9c7 h1g3
+<< info depth 7 seldepth 10 multipv 1 score cp 865 nodes 46656 nps 218018 tbhits 0 time 214 pv b1c3 g9f7 b3b5 g8g7 b5a5 b9a7 a5i5
+<< info depth 8 seldepth 11 multipv 1 score cp 908 nodes 65513 nps 214796 tbhits 0 time 305 pv b3d3 f9d7 c4d4 d7f5 d3d5 f5d7 d5i5
+<< info depth 9 seldepth 15 multipv 1 score cp 923 nodes 97330 nps 203194 tbhits 0 time 479 pv b3d3 f9d7 c4d4 g9f7 d3d7 c8d7 h1g3 b9c7 b1a3
+<< info depth 10 seldepth 17 multipv 1 score cp 951 nodes 108741 nps 205171 tbhits 0 time 530 pv b3d3 f9d7 c4d4 b9c7 d3d7 c8d7 b1c3 g9f7 c3d5
+<< info depth 11 seldepth 19 multipv 1 score cp 880 nodes 231908 nps 230524 hashfull 151 tbhits 0 time 1006 pv b3d3 f9d7
+<< bestmove b3d3 ponder f9d7
+>> 
+>> go preft 1
+<< info string classical evaluation enabled
+<< info depth 1 seldepth 1 multipv 1 score cp 880 nodes 62 nps 6888 tbhits 0 time 9 pv h3h8
+<< info depth 2 seldepth 2 multipv 1 score cp 880 nodes 125 nps 8928 tbhits 0 time 14 pv h3h8 g8g6
+<< info depth 3 seldepth 3 multipv 1 score cp 880 nodes 224 nps 14000 tbhits 0 time 16 pv b3d3 f9d7 c4d4
+<< info depth 4 seldepth 4 multipv 1 score cp 880 nodes 303 nps 16833 tbhits 0 time 18 pv b3d3 f9d7 c4d4 d7g7
+<< info depth 5 seldepth 5 multipv 1 score cp 932 nodes 384 nps 16000 tbhits 0 time 24 pv b3d3 f9d7 c4d4
+<< info depth 6 seldepth 7 multipv 1 score cp 881 nodes 2627 nps 84741 tbhits 0 time 31 pv h3h8 g8g6 h8h6 f8f6 b3d3 h9d5
+<< info depth 7 seldepth 9 multipv 1 score cp 884 nodes 5118 nps 119023 tbhits 0 time 43 pv b3d3 f9d7 c4d4 d7c6 h3h8 f8f6 h8h6 f6f5 h6i6
+<< info depth 8 seldepth 13 multipv 1 score cp 900 nodes 10552 nps 159878 tbhits 0 time 66 pv b3d3 f9d7 c4d4 d7c6 h3h8 f8f6 h8h6 g8g6 h6i6 g9h7 h1g3
+<< info depth 9 seldepth 14 multipv 1 score cp 900 nodes 19229 nps 188519 tbhits 0 time 102 pv b3d3 f9d7 c4d4 d7c6 h3h8 f8f6 h8h6 g8g6 h6i6 g9h7 h1g3 b9c7 i6i9 h7i9
+<< info depth 10 seldepth 18 multipv 1 score cp 829 nodes 130677 nps 213176 tbhits 0 time 613 pv h3h8 f8f6 b3d3 f9d7 c4d4 d7c6 h8h6 g8g6 h6i6 g9h7 i6i9 h7i9
+<< info depth 11 seldepth 13 multipv 1 score cp 887 nodes 159098 nps 218541 tbhits 0 time 728 pv h3h8 f8f6 h8h6 i8i6 h6a6 b9a7 h1g3 g9h7 b3d3 f9d7 a6a5
+<< info depth 12 seldepth 19 multipv 1 score cp 831 nodes 698504 nps 232912 hashfull 442 tbhits 0 time 2999 pv b3d3 f9d7 c4d4 d7c6 h3h8 g9h7 h8h6 i8i6 c1e3 b9c7 h6d6 d9e8 i4i5 e8f9
+<< info depth 13 currmove b3d3 currmovenumber 1
+<< info depth 13 seldepth 20 multipv 1 score cp 839 lowerbound nodes 800979 nps 233999 hashfull 512 tbhits 0 time 3423 pv b3d3
+<< info depth 12 currmove b3d3 currmovenumber 1
+<< info depth 13 seldepth 20 multipv 1 score cp 847 lowerbound nodes 803639 nps 233683 hashfull 512 tbhits 0 time 3439 pv b3d3
+<< info depth 11 currmove b3d3 currmovenumber 1
+<< info depth 13 seldepth 20 multipv 1 score cp 860 lowerbound nodes 806504 nps 233633 hashfull 513 tbhits 0 time 3452 pv b3d3
+<< info depth 10 currmove b3d3 currmovenumber 1
+<< info depth 13 seldepth 20 multipv 1 score cp 878 lowerbound nodes 808368 nps 233564 hashfull 513 tbhits 0 time 3461 pv b3d3
+<< info depth 9 currmove b3d3 currmovenumber 1
+<< info depth 9 currmove h3h8 currmovenumber 2
+<< info depth 9 currmove b1c3 currmovenumber 3
+<< info depth 9 currmove d1e2 currmovenumber 4
+<< info depth 9 currmove f1e2 currmovenumber 5
+<< info depth 9 currmove f1f2 currmovenumber 6
+<< info depth 9 currmove e1e2 currmovenumber 7
+<< info depth 9 currmove a1a3 currmovenumber 8
+<< info depth 9 currmove g1f2 currmovenumber 9
+<< info depth 9 currmove i1i3 currmovenumber 10
+<< info depth 9 currmove g1e3 currmovenumber 11
+<< info depth 9 currmove d1d2 currmovenumber 12
+<< info depth 9 currmove c1d2 currmovenumber 13
+<< info depth 9 currmove a1a2 currmovenumber 14
+<< info depth 9 currmove i1i2 currmovenumber 15
+<< info depth 9 currmove b1a3 currmovenumber 16
+<< info depth 9 currmove c4d4 currmovenumber 17
+<< info depth 9 currmove h1i3 currmovenumber 18
+<< info depth 9 currmove b3c3 currmovenumber 19
+<< info depth 9 currmove c1e3 currmovenumber 20
+<< info depth 9 currmove b3e3 currmovenumber 21
+<< info depth 9 currmove d1c2 currmovenumber 22
+<< info depth 9 currmove h3h5 currmovenumber 23
+<< info depth 9 currmove b3f3 currmovenumber 24
+<< info depth 9 currmove f1g2 currmovenumber 25
+<< info depth 9 currmove h3d3 currmovenumber 26
+<< info depth 9 currmove h3f3 currmovenumber 27
+<< info depth 9 currmove h3e3 currmovenumber 28
+<< info depth 9 currmove b3b5 currmovenumber 29
+<< info depth 9 currmove i4i5 currmovenumber 30
+<< info depth 9 currmove b3b6 currmovenumber 31
+<< info depth 9 currmove e4d4 currmovenumber 32
+<< info depth 9 currmove h3g3 currmovenumber 33
+<< info depth 9 currmove h1g3 currmovenumber 34
+<< info depth 9 currmove b3g3 currmovenumber 35
+<< info depth 9 currmove h3c3 currmovenumber 36
+<< info depth 9 currmove b3a3 currmovenumber 37
+<< info depth 9 currmove h3h6 currmovenumber 38
+<< info depth 9 currmove g4f4 currmovenumber 39
+<< info depth 9 currmove b3b2 currmovenumber 40
+<< info depth 9 currmove c4c5 currmovenumber 41
+<< info depth 9 currmove b3i3 currmovenumber 42
+<< info depth 9 currmove g1h2 currmovenumber 43
+<< info depth 9 currmove e4e5 currmovenumber 44
+<< info depth 9 currmove a4a5 currmovenumber 45
+<< info depth 9 currmove b4b5 currmovenumber 46
+<< info depth 9 currmove e4f4 currmovenumber 47
+<< info depth 9 currmove g4g5 currmovenumber 48
+<< info depth 9 currmove c1b2 currmovenumber 49
+<< info depth 9 currmove h3h2 currmovenumber 50
+<< info depth 9 currmove h4h5 currmovenumber 51
+<< info depth 9 currmove h3i3 currmovenumber 52
+<< info depth 9 currmove h3a3 currmovenumber 53
+<< info depth 9 currmove g1i3 currmovenumber 54
+<< info depth 9 currmove c1a3 currmovenumber 55
+<< info depth 9 currmove b3b7 currmovenumber 56
+<< info depth 9 currmove h3h7 currmovenumber 57
+<< info depth 9 currmove b3b8 currmovenumber 58
+<< info depth 13 seldepth 20 multipv 1 score cp 888 nodes 815273 nps 228112 hashfull 517 tbhits 0 time 3574 pv b3d3 f9d7 e4d4 d7c6 h3h5 i8i6 h5d5 d9e8 d5a5 b9a7 h1g3 g9f7
+<< info depth 14 currmove b3d3 currmovenumber 1
+<< info depth 14 seldepth 20 multipv 1 score cp 888 nodes 821672 nps 227925 hashfull 521 tbhits 0 time 3605 pv b3d3 f9d7 e4d4 d7c6 h3h5 i8i6 h5d5 d9e8 d5a5 b9a7 h1g3 g9f7
+<< bestmove b3d3 ponder f9d7

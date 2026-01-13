@@ -1,7 +1,86 @@
 import beach
 from threading import Thread
+from tkinter import filedialog
 
 ANIM_SPEED = 1
+
+class SettingElement:
+    def __init__(self, rect):
+        if rect is not None:
+            for i in rect:
+                if not 0<=i<=1:
+                    raise False
+        self.rect = rect
+
+    def is_clicked(self, x, y):
+        return self.rect[0]<x<self.rect[0]+self.rect[2] and self.rect[1]<y<self.rect[1]+self.rect[3]
+
+    def active(self):
+        pass
+
+    def tick_update(self,c,p):
+        pass
+
+class Button(SettingElement):
+    def __init__(self,commands,texts,n=0,rect = None,shade_time_max=10):
+        super().__init__(rect)
+        self.n = n; self.commands = commands; self.texts = texts
+        if len(commands) != len(texts):
+            raise False
+        self.length = len(commands)
+        self.shade_time_max = shade_time_max
+        self.shade_time = 0
+
+    def active(self):
+        self.n+=1
+        self.n%=self.length
+        self.shade_time = self.shade_time_max
+        return self.commands[self.n]
+
+    def return_text(self):
+        return self.texts[self.n]
+
+    def tick_update(self,c,p):
+        if not p:
+            self.shade_time = max(0, self.shade_time-1)
+
+def sort_menu_elements_rect(menu, element_per_line_max = 2):
+    line_count = 0
+    per_line_count = 0
+    line_d = 0.1 #行距
+    side_d = 0.2 #边距
+    top_d = 0.3 #顶端优势
+    elem_d = (1 - 2*side_d)/(element_per_line_max*4-1)*4 #元素间距
+
+    elex = elem_d * (3/4) #元素宽
+    eley = line_d / 2
+
+    for elem in menu:
+        if elem.rect is not None:
+            continue
+        if type(elem) == Button:
+            _temp_rect = (side_d+per_line_count*elem_d, top_d+line_count*line_d, elex, eley)
+            elem.rect = _temp_rect
+
+        per_line_count += 1
+        if per_line_count >= element_per_line_max:
+            line_count += 1
+            per_line_count = 0
+
+
+main_menu =  [
+             Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
+             Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
+                    ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
+             Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
+                    ['提示:高级', '提示:大师'],n=1),
+             Button(['self.save()'],['保存'], shade_time_max=0),
+             Button(['self.load()'],['载入'], shade_time_max=0),
+             Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0)
+             ]
+
+sort_menu_elements_rect(main_menu)
+
 
 class Game:
     def __init__(self):
@@ -22,14 +101,15 @@ class Game:
         # 游戏规则相关
         self.ai_chn = False
         self.ai_int = False
-        self.ai_think_time = 500
+        self.ai_think_time = 1
+        self.hint_think_time = 1000
+        self.active_menu = main_menu
 
     def reset_special_pieces_show(self):
         self.highlight_paths = []
         self.last_choice_piece = (-1,-1)
 
-    def handle_input_p(self, display_p):
-        # 下棋
+    def handle_input_p(self, display_p ,w, h, mx, my, c, p):
         if self.state == 'play':
             if display_p is not None:
                 if 0 <= display_p <= 80:
@@ -40,22 +120,48 @@ class Game:
                     self.adjust_ai(display_p)
             self.process_animation()
             self.process_steady_pieces()
-            self.process_UIs()
+            self.process_UIs(p)
         elif self.state == 'wait' or self.state == 'waits':
             if display_p is not None:
                 self.adjust_ai(display_p)
             self.process_animation()
             self.process_steady_pieces()
-            self.process_UIs()
+            self.process_UIs(p)
         elif self.state == 'promotion':
             if display_p is not None:
                 if self.board_is_flipped:
                     self.handle_promotion_select(80-display_p)
                 else:
                     self.handle_promotion_select(display_p)
+
+        elif self.state == 'setting':
+            # 将鼠标坐标传递给设置界面进行处理
+            for elem in self.active_menu:
+                elem.tick_update(c,p)
+            if c:
+                if w > h:
+                    ry = my / h
+                    rx = (mx - (w - h) / 2) / h
+                else:
+                    rx = mx / w
+                    ry = (my - (h - w) / 2) / w
+                self.handle_menu_click(rx, ry)
+
         # 返回全部显示组件
         return (self.board_is_flipped, self.steady_pieces, self. piece_animations,
-                self.last_choice_piece, self.highlight_paths, self.UIs, self.pressed_button)
+                self.last_choice_piece, self.highlight_paths, self.UIs, self.pressed_button,
+                self.active_menu if self.state == 'setting' else None)
+
+    def handle_menu_click(self, rx, ry):
+        # element_button[type,rect,img_source,end_command,n,commands]
+        for elem in self.active_menu:
+            if elem.is_clicked(rx, ry):
+                command = elem.active()
+                break
+        else:
+            command = None
+        if command is not None:
+            exec(command)
 
     def handle_promotion_select(self, p):
         tp = beach.fsf2beach(self.promotion_move[2:4])
@@ -77,11 +183,11 @@ class Game:
         if p == 81:
             self.ai_int ^= 1
             if self.ai_int and ' b ' in self.board.fen and self.state == 'play':
-                self.auto_move()
+                self.auto_move(tt = self.ai_think_time)
         elif p == 89:
             self.ai_chn ^= 1
             if self.ai_chn and ' w ' in self.board.fen and self.state == 'play':
-                self.auto_move()
+                self.auto_move(tt = self.ai_think_time)
 
     def handle_game_UIs(self, p):
         if p == 98:
@@ -97,7 +203,18 @@ class Game:
             self.board_is_flipped ^= 1
             self.pressed_button = [96, 10]
         elif p == 91:
-            self.auto_move()
+            self.auto_move(tt = self.hint_think_time)
+        elif p == 92:
+            self.state = 'setting'
+
+    def do_checkmate_animation(self, delay = 10):
+        if ' w ' in self.board.fen:
+            p = self.board.beach.index(6, 56)
+            self.piece_animations.append((p, p, 0, 20+delay, 6))
+        else:
+            p = self.board.beach.index(12)
+            self.piece_animations.append((p, p, 0, 20+delay, 12))
+        self.piece_animations.append((-2, p, -delay, 20, 15))
 
     # 删除结束的动画，进度 +1
     def process_animation(self):
@@ -123,13 +240,14 @@ class Game:
             p += 1
 
     #这个顺便处理UI按钮点击效果
-    def process_UIs(self):
+    def process_UIs(self, pressed):
         self.UIs.clear()
         if self.state == 'play' or self.state == 'waits':
             self.UIs.add((91, '!'))
             self.UIs.add((96, '&'))
             self.UIs.add((98, 'undo'))
             self.UIs.add((99, 'gret'))
+            self.UIs.add((92, 'setting'))
         if self.state == 'play' or self.state == 'wait' or self.state == 'waits':
             if self.board_is_flipped:
                 self.UIs.add((89, 'r' if self.ai_int else 'h'))
@@ -137,24 +255,24 @@ class Game:
             else:
                 self.UIs.add((81, 'r' if self.ai_int else 'h'))
                 self.UIs.add((89, 'r' if self.ai_chn else 'h'))
-        if self.pressed_button[-1] > 0:
+        if self.pressed_button[-1] > 0 and not pressed:
             self.pressed_button[-1] -= 1
 
-    def _am(self, d=False):
+    def _am(self, d=False, tt = 1000):
         if d:
             self.gret()
-        if not self.board.get_pms():
+        if self.board.get_pms()[1]:
             self.state = 'play'
             return
         self.state = 'wait'
         try:
-            move = self.board.get_best_move(think_time=self.ai_think_time)
+            move = self.board.get_best_move(think_time=tt)
         except RuntimeError:
             return
         self.apply_move(move)
 
-    def auto_move(self, do_gret=False):
-        Thread(target=self._am,args=(do_gret,)).start()
+    def auto_move(self, do_gret=False, tt = 1000):
+        Thread(target=self._am,args=(do_gret, tt,)).start()
 
     def apply_move(self, move):
         if len(self.moves) != self.move_step:
@@ -162,7 +280,7 @@ class Game:
         self.moves.append(move)
         if ((self.ai_chn and ' b ' in self.board.fen) or
             (self.ai_int and ' w ' in self.board.fen)):
-            self.auto_move(True)
+            self.auto_move(True, tt = self.ai_think_time)
         else:
             self.thread_gret()
 
@@ -198,7 +316,12 @@ class Game:
         if beach_p is None or beach_p == self.last_choice_piece[0]:
             self.reset_special_pieces_show()
             return
-        self.highlight_paths = self.board.get_pms(beach_p)
+        self.highlight_paths, game_end = self.board.get_pms(beach_p)
+        # 将杀了
+        if game_end:
+            self.reset_special_pieces_show()
+            self.do_checkmate_animation(delay=0)
+            return
         # 如果子走不动路，重置
         if not self.highlight_paths:
             self.reset_special_pieces_show()
@@ -254,6 +377,8 @@ class Game:
                 self.piece_animations.append((fp, tp, 0, 10//ANIM_SPEED, piece_typ))
             self.move_step += 1
             self.board.moves_reset(self.moves[:self.move_step])
+            if self.board.get_pms()[1]:
+                self.do_checkmate_animation()
 
     def reset(self, fen = None):
         if fen is None:
@@ -273,6 +398,45 @@ class Game:
         self.move_step = 0
         self.ai_chn = False
         self.ai_int = False
+
+    def save(self):
+        content = self.board.initial_fen + '|' + ' '.join(self.moves)
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".binggo",
+            initialdir='saves\\',
+            filetypes=[("BingGo存档文件", "*.binggo")]
+        )
+        if file_path:
+            with open(file_path, 'w', encoding='ascii') as file:
+                file.write(content)
+            # print('假装保存了')
+
+    def load(self):
+        file_path = filedialog.askopenfilename(
+            defaultextension=".binggo",
+            initialdir='saves\\',
+            filetypes=[("BingGo存档文件", "*.binggo")]
+        )
+        if file_path:
+            with open(file_path, 'r', encoding='ascii') as file:
+                content = file.read()
+                fen, moves = content.strip().split('|')
+                try:
+                    self.board.reset(fen)
+                    _m = moves.split(' ')
+                    self.moves = _m if _m != [''] else []
+                    self.board.moves_reset(self.moves)
+                    self.board.moves_reset([])
+                except Exception as e:
+                    print('存档文件损坏',e)
+                    self.board.reset(force=True)
+                    self.moves = []
+                    return
+                self.state = 'play'
+                self.move_step = 0
+                self.ai_chn = False
+                self.ai_int = False
+                return
 
     def _tu(self,s):
         self.state = 'waits'
