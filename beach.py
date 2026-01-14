@@ -2,8 +2,8 @@ import time
 
 import engine as fsf
 
-c2p = {'C':1,'M':2,'X':3,'S':4,'A':5,'W':6,'O':7,'r':8,'b':9,'n':10,'q':11,'k':12,'p':13}
-p2c = {1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q',12:'k',13:'p',-1:''}
+c2p = {'J':0,'C':1,'M':2,'X':3,'S':4,'A':5,'W':6,'O':7,'r':8,'b':9,'n':10,'q':11,'k':12,'p':13}
+p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q',12:'k',13:'p',-1:''}
 
 a2n = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7,'i':8}
 n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
@@ -51,7 +51,7 @@ class Beach:
             else:
                 self.beach.append(c2p[char])
         if len(self.beach) != 81:
-            raise False
+            raise IndexError('beach must contain 81 elements')
 
     def beach2fen(self):
         pieces = ''; n = 0; lc = 0
@@ -79,10 +79,10 @@ class Beach:
         self.fen2beach(self.fen)
 
 
-    def get_best_move(self, think_time = 2000):
+    def get_best_move(self, movetime=2000):
         """ 当前局面引擎解法 """
         st = time.time()
-        move = self.eng.best_move(self.fen, think_time=think_time)[0]
+        move = self.eng.best_move(self.fen, movetime=movetime)[0]
         _t = time.time() - st
         if _t < 200:
             time.sleep(0.2)
@@ -105,3 +105,7 @@ class Beach:
     
     def suicide(self):
         self.eng.close()
+
+    def reboot_engine(self):
+        self.suicide()
+        self.eng = fsf.BinggoEngine()

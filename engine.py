@@ -4,7 +4,7 @@ import time
 BOARD_FILES = 'abcdefghi'
 BOARD_RANKS = '123456789'
 PIECE_TYPS_LOWER = 'rnbkqpoacmxswj'
-PIECE_TYPS_LOWER_PROMOTED_ONLY = 'jqnbr'
+PIECE_TYPS_LOWER_PROMOTED_ONLY = 'jqnbrcaxsm'
 
 def is_pgn(move: str) -> bool:
     """检查走法格式是否符合pgn格式"""
@@ -18,8 +18,9 @@ def is_pgn(move: str) -> bool:
 
 
 class BinggoEngine:
-    def __init__(self,
-                 engine_path="engine\\fairy-stockfish-largeboards_x86-64-bmi2-latest.exe"):  # 沿用BingGo beta 1.2使用的引擎，否则Pawn出现意外错误
+    def __init__(self, 
+                 engine_path="engine\\fairy-stockfish-largeboards_x86-64-bmi2-latest.exe",  # 沿用BingGo beta 1.2使用的引擎，否则Pawn出现意外错误
+                 ini_file="engine\\binggo.ini"):
         """
         初始化引擎
         engine_path: 引擎可执行文件路径
@@ -35,18 +36,21 @@ class BinggoEngine:
             text=True,
             bufsize=1  # 行缓冲
         )
+        self.wait_time = 0.001
 
         # 初始化引擎
-        INI_FILE_NAME = "engine\\binggo.ini"
+        self.ini_file_name = ini_file
 
         self._send_command("uci")
-        self._send_command(f"setoption name VariantPath value {INI_FILE_NAME}")
+        self._send_command(f"setoption name VariantPath value {self.ini_file_name}")
         self._send_command("setoption name UCI_Variant value binggo")
         self._send_command("ucinewgame")
         self._send_command("startpos")  # 必须给我加上！！
 
         """
+        引擎调试咒语
         uci
+        setoption name Debug Log File value debug.log
         setoption name VariantPath value binggo.ini
         setoption name UCI_Variant value binggo
         ucinewgame
@@ -103,7 +107,7 @@ class BinggoEngine:
             return
         self.proc.stdin.write(cmd + "\n")
         self.proc.stdin.flush()
-        time.sleep(0.002)
+        time.sleep(self.wait_time)
 
     @staticmethod
     def _extract_fen_from_board(board_output):
@@ -177,18 +181,18 @@ class BinggoEngine:
                     print(f"Warning: Invalid PGN move: {move}")
         return moves
 
-    def best_move(self, fen: str, think_time=2000) -> tuple[str | None, str | None]:
+    def best_move(self, fen: str, movetime=2000) -> tuple[str, str] | tuple[None, None]:
         """
         从给定的FEN位置获取最佳走法
         @param fen: 起始局面的FEN字符串
-        @param think_time: 思考时间(毫秒)
+        @param movetime: 思考时间(毫秒)
         @return: (best_move, new_fen): 最佳走法和执行走法后的新FEN
 
         出错则为None，请及时校验。
         """
         # 获取最佳走法
         self._send_command(f"position fen {fen}")
-        self._send_command(f"go movetime {think_time}")
+        self._send_command(f"go movetime {movetime}")
         output = self._read_until("bestmove").strip()
         parts = output.split('\n')[-1].strip().split()
         if len(parts) > 1 and is_pgn(parts[1]):
@@ -202,11 +206,47 @@ class BinggoEngine:
         self._send_command("d")
         output = self._read_until("Chased")
         new_fen = self._extract_fen_from_board(output)
+        if new_fen:
+            return best_move, new_fen
+        else:
+            return None, None
 
-        return best_move, new_fen
-
-    def analyze(self):
-        raise NotImplementedError("The analyze method is currently disabled.")
+    def analyze(self, fen: str, movetime=2000) -> tuple[str, float, int] | tuple[None, None, None]:  # TODO
+        # 获取输出
+        self._send_command(f"position fen {fen}")
+        self._send_command(f"go movetime {movetime}")
+        output = self._read_until("bestmove").strip()
+        lines = output.split('\n')
+        # 解析数据
+        try:
+            assert lines[-1].startswith("bestmove")
+            best_move = lines[-1].split()[1]
+            assert lines[-2].startswith("info")
+            _ = lines[-2].split()
+            score_cp =  int(_[_.index("cp") + 1]) / 100
+            ana_depth = int(_[_.index("depth") + 1])
+            return best_move, score_cp, ana_depth
+        except (AssertionError, IndexError, ValueError) as e:
+            print(f"Warning: Invalid output from engine.\t{e.with_traceback}")
+            return None, None, None
+    
+    def 这种评分评价他会把人的付出给异化掉的懂吗(self, fen: str, user_move: str, one_movetime=2000) -> float | None:
+        # try: mycamp = {'w': 1, 'b': -1}[fen.strip().split()[1]]
+        # except LookupError:
+        #     raise ValueError(f"Warning: Invalid FEN string: {fen}")
+        if not is_pgn(user_move):
+            raise ValueError(f"Warning: Invalid PGN move: {user_move}")
+        best_move, before_score_cp, _ = self.analyze(fen, one_movetime)
+        if best_move == user_move:
+            return float("inf")
+        _, after_score_cp, _ = self.analyze(self.perform_move(fen, user_move))
+        if before_score_cp is None or after_score_cp is None:
+            print("Warning: Invalid score from engine.")
+            return None
+        print(f"{user_move}前评分: {before_score_cp}，后评分: {after_score_cp}")
+        print(f"{user_move=}, {best_move=}")
+        # return (after_score_cp + before_score_cp) * mycamp
+        return -(after_score_cp + before_score_cp)
 
     def close(self) -> None:
         """关闭引擎"""
@@ -239,7 +279,7 @@ def test():
         print(f"执行后的FEN: {new_fen}")
 
     print("\n3. 测试最佳走法功能:")
-    best_move, best_new_fen = eng.best_move(ori_fen, think_time=1000)  # 1秒思考时间
+    best_move, best_new_fen = eng.best_move(ori_fen, movetime=1000)  # 1秒思考时间
     if best_move:
         print(f"最佳走法: {best_move}")
         print(f"走法后的新FEN: {best_new_fen}")
@@ -262,4 +302,7 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    # test()
+    eng = BinggoEngine()
+    fen = "rnbk1qnbr/ppppOpppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
+    print("e8e9j" in eng.pms(fen))

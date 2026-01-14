@@ -8,7 +8,7 @@ import game as gm
 #     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 ## TEMP!!!
-n2c = {1:'车',2:'马',3:'相',4:'士',5:'炮',6:'帅',7:'卒',8:'城',9:'教',10:'骑',11:'后',12:'王',13:'兵',14:'升变衬底',15:'将杀'}
+n2c = {0:'将',1:'车',2:'马',3:'相',4:'士',5:'炮',6:'帅',7:'卒',8:'城',9:'教',10:'骑',11:'后',12:'王',13:'兵',14:'升变衬底',15:'将杀'}
 
 FONT = 'fonts\\STLITI.TTF'
 IMG_SOURCE = 'imgs'
@@ -55,6 +55,8 @@ def play():
     line_w = int(cell_size / 20)
     size_adjust_rate = 1
     MAX_SCREEN_PIXEL = 3000
+
+    shade_count = 0
 
     def adjust_max_pixel():
         nonlocal width, height, square_size, square_x, square_y, cell_size, size_adjust_rate
@@ -177,6 +179,9 @@ def play():
             game.handle_input_p(number, width, height, mouse_x, mouse_y, clicked, pressed))
 
         if menu is not None:
+            if shade_count < 10:
+                shade_count += 1
+
             settings.fill((0,0,0,0))
             screen.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
                                            min(height - background_image.get_height(), 0)))
@@ -196,11 +201,13 @@ def play():
                                       normal_size_rect[1]))
 
             bg = pygame.Surface((width, height), pygame.SRCALPHA)
-            bg.fill((0, 0, 0, 100))
+            bg.fill((0, 0, 0, 100 * shade_count/10))
             screen.blit(bg, (0,0))
             screen.blit(settings, (square_x,square_y))
 
         else:
+            if shade_count > 0:
+                shade_count -= 1
 
             pieces.fill((0,0,0,0))
             if flipped ^ last_flip:
@@ -313,7 +320,12 @@ def play():
                 screen.blit(pygame.transform.scale(small_screen,screen.get_size()),(0,0))
             else:
                 screen.blit(background_and_board, (0, 0))
+
                 screen.blit(pieces,(0,0))
+                if shade_count > 0:
+                    bg = pygame.Surface((width, height), pygame.SRCALPHA)
+                    bg.fill((0, 0, 0, 100 * shade_count / 10))
+                    screen.blit(bg, (0, 0))
 
         if time.time()-st>0.01:
             print(time.time()-st)
