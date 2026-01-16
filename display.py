@@ -1,6 +1,6 @@
-import time
-import pygame
 import sys
+import pygame
+import time
 import game as gm
 
 # import ctypes
@@ -57,6 +57,7 @@ def play():
     MAX_SCREEN_PIXEL = 3000
 
     shade_count = 0
+    bar_count = 0.5
 
     def adjust_max_pixel():
         nonlocal width, height, square_size, square_x, square_y, cell_size, size_adjust_rate
@@ -96,6 +97,8 @@ def play():
 
     board_image_original = pygame.image.load(f'{IMG_SOURCE}/board.png').convert_alpha()
 
+    bar_img_original = pygame.image.load(f'{IMG_SOURCE}/rate_bar.png').convert_alpha()
+
     all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r','pressed','dot','empty_button']
 
     name2piece_original_surface = {}
@@ -111,12 +114,12 @@ def play():
             text_surface = font.render(n2c[typ], True, (20, 20, 20) if typ > 7 else (137, 57, 37))
             tmps.blit(text_surface,(110,110))
             name2piece_original_surface[name] = tmps
-    background_and_board = board_image = background_image = pieces = small_screen = settings = pygame.Surface((0,0))
+    background_and_board = board_image = background_image = pieces = small_screen = settings = bar_img = pygame.Surface((0,0))
 
     pygame.display.set_icon(name2piece_original_surface['帅'])
 
     def reset_all_imgs():
-        nonlocal background_and_board, pieces, board_image, font, settings, \
+        nonlocal background_and_board, pieces, board_image, font, settings, bar_img,\
             background_and_board, background_image, small_screen, pieces, width, height
         small_screen = pygame.Surface((width, height), pygame.SRCALPHA)
         background_and_board = pygame.Surface((width, height), pygame.SRCALPHA)
@@ -132,6 +135,7 @@ def play():
         background_and_board.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
                                                      min(height - background_image.get_height(), 0)))
         background_and_board.blit(board_image, (square_x, square_y))
+        bar_img = pygame.transform.scale(bar_img_original, (cell_size*0.97, cell_size*7.3))
 
         for name_ in all_piece_img_names + list(n2c.values()):
             name2piece_surface[name_] = pygame.transform.scale(name2piece_original_surface[name_],
@@ -175,7 +179,7 @@ def play():
 
         st = time.time()
         last_flip = flipped
-        flipped, steady, animations, last_choice, paths, UIs, pressed, menu = (
+        flipped, steady, animations, last_choice, paths, UIs, pressed, menu, score = (
             game.handle_input_p(number, width, height, mouse_x, mouse_y, clicked, pressed))
 
         if menu is not None:
@@ -206,6 +210,7 @@ def play():
             screen.blit(settings, (square_x,square_y))
 
         else:
+
             if shade_count > 0:
                 shade_count -= 1
 
@@ -311,6 +316,24 @@ def play():
                 elif p // 10 == 9:
                     pieces.blit(text_surface, (square_x + cell_size * 10.2, square_y + p % 10 * cell_size))
 
+            # 评分条
+            if score != -1:
+                bar_count = (bar_count+score)/2
+                if flipped:
+                    pygame.draw.rect(pieces, (0, 0, 0),
+                                     (square_x + cell_size * 0.09, square_y + cell_size * 2,
+                                      cell_size * 0.5, cell_size * 7))
+                    pygame.draw.rect(pieces, (255, 0, 0),
+                                     (square_x + cell_size * 0.09, square_y + cell_size * 2,
+                                      cell_size * 0.5, bar_count*7*cell_size))
+                else:
+                    pygame.draw.rect(pieces, (255, 0, 0),
+                                     (square_x + cell_size * 0.09, square_y + cell_size * 2,
+                                      cell_size * 0.5, cell_size * 7))
+                    pygame.draw.rect(pieces, (30, 30, 30),
+                                     (square_x + cell_size * 0.09, square_y + cell_size * 2,
+                                      cell_size * 0.5, (1-bar_count)*7*cell_size))
+                pieces.blit(bar_img, (square_x - cell_size*0.2, square_y + cell_size * 1.8))
 
             screen.fill((0,0,0))
             if size_adjust_rate != 1:

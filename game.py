@@ -1,4 +1,5 @@
 import beach
+import rate
 from threading import Thread
 from tkinter import filedialog
 
@@ -9,7 +10,7 @@ class SettingElement:
         if rect is not None:
             for i in rect:
                 if not 0<=i<=1:
-                    raise ValueError("rect out of range")
+                    raise ValueError("rect参数错误")
         self.rect = rect
 
     def is_clicked(self, x, y):
@@ -26,7 +27,7 @@ class Button(SettingElement):
         super().__init__(rect)
         self.n = n; self.commands = commands; self.texts = texts
         if len(commands) != len(texts):
-            raise ValueError("commands and texts must have same length")
+            raise ValueError("commands和texts长度不一致")
         self.length = len(commands)
         self.shade_time_max = shade_time_max
         self.shade_time = 0
@@ -67,34 +68,35 @@ def sort_menu_elements_rect(menu, element_per_line_max = 2):
             line_count += 1
             per_line_count = 0
 
-
 main_menu =  [
-    Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
-    Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0),
-    Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
-           ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
-    Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
-           ['提示:高级', '提示:大师'],n=1),
-    Button(['self.save()'],['保存'], shade_time_max=0),
-    Button(['self.load()'],['载入'], shade_time_max=0),
-    Button(['self.active_menu = engine_setting; self.read_ini()'],['更改规则'], shade_time_max=0)
-]
+             Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
+             Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0),
+             Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
+                    ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
+             Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
+                    ['提示:高级', '提示:大师'],n=1),
+             Button(['self.save()'],['保存'], shade_time_max=0),
+             Button(['self.load()'],['载入'], shade_time_max=0),
+             Button(['self.active_menu = engine_setting; self.read_ini()'],['更改规则'], shade_time_max=0),
+             Button(['self.show_ai_bar=False', 'self.show_ai_bar=True'],
+                    ['评分条关闭', '评分条打开'])
+             ]
 sort_menu_elements_rect(main_menu)
 
 engine_setting = [
-    Button(['self.apply_engine_change()'],['重新开始'], rect=(0.25,0.9,0.2,0.05)),
-    Button(['self.active_menu = main_menu;self.config_setting_operations()'],['取消更改'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
-    Button(['self.set_chn_promotion(False);self.promotion_allowed = False',
-            'self.set_chn_promotion(True);self.promotion_allowed = True'],
-           ['不允许中国象棋升变', '允许中国象棋升变']),
-    Button(['self.set_king_mobility(False)','self.set_king_mobility(True)'],
-           ['不允许国王进入九宫', '允许国王进入九宫']),
-    Button(['self.set_queen_can_move_infinite(False)','self.set_queen_can_move_infinite(True)'],
-           ['皇后移动长度不能大于三', '允许皇后长距离移动'])
-]
-
+             Button(['self.apply_engine_change()'],['重新开始'], rect=(0.25,0.9,0.2,0.05)),
+             Button(['self.active_menu = main_menu;self.read_ini();self.config_setting_operations()'],['取消更改'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
+             Button(['self.set_chn_promotion(False);self.promotion_allowed = False',
+                     'self.set_chn_promotion(True);self.promotion_allowed = True'],
+                    ['不允许中国象棋升变', '允许中国象棋升变']),
+             Button(['self.set_king_mobility(False)','self.set_king_mobility(True)'],
+                    ['不允许国王进入九宫', '允许国王进入九宫']),
+             Button(['self.set_queen_can_move_infinite(False)','self.set_queen_can_move_infinite(True)'],
+                    ['皇后移动长度不能大于三', '允许皇后长距离移动'])
+                ]
 sort_menu_elements_rect(engine_setting,1)
 
+# noinspection SpellCheckingInspection
 allowed_pro ='''; promo
 pawnTypes = po
 promotionPawnTypesWhite = o
@@ -114,6 +116,11 @@ allow_queen_infinite = '; queen_mov\nqueen = q\n; queen_mov'
 class Game:
     def __init__(self):
         self.board = beach.Beach()
+        self.rater = rate.RatingSystem()
+        self.rater.refresh_fen(self.board.fen)
+        self.rater.thread_rate_begin()
+        self.last_score = 0
+        self.red_rate = 0.5
         #显示相关
         self.steady_pieces = set()
         self.highlight_paths = set()
@@ -132,9 +139,11 @@ class Game:
         self.ai_int = False
         self.ai_think_time = 1
         self.hint_think_time = 1000
-        self.show_engine_rate = False
         self.active_menu = main_menu
+        self.show_ai_bar = False
         # 引擎ini相关
+        self.ini_content = None
+        self.promotion_allowed = None
         self.read_ini()
         self.config_setting_operations()
         with open('engine\\config.ini', 'r', encoding='UTF-8') as f:
@@ -153,12 +162,14 @@ class Game:
                     self.reset_special_pieces_show()
                     self.handle_game_UIs(display_p)
                     self.adjust_ai(display_p)
+            self.renew_score()
             self.process_animation()
             self.process_steady_pieces()
             self.process_UIs(p)
         elif self.state == 'wait' or self.state == 'waits':
             if display_p is not None:
                 self.adjust_ai(display_p)
+            self.renew_score()
             self.process_animation()
             self.process_steady_pieces()
             self.process_UIs(p)
@@ -168,9 +179,7 @@ class Game:
                     self.handle_promotion_select(80-display_p)
                 else:
                     self.handle_promotion_select(display_p)
-
         elif self.state == 'setting':
-            # 将鼠标坐标传递给设置界面进行处理
             for elem in self.active_menu:
                 elem.tick_update(c,p)
             if c:
@@ -181,11 +190,36 @@ class Game:
                     rx = mx / w
                     ry = (my - (h - w) / 2) / w
                 self.handle_menu_click(rx, ry)
+        elif self.state == 'setting_wait':
+            for elem in self.active_menu:
+                elem.tick_update(c, p)
 
         # 返回全部显示组件
         return (self.board_is_flipped, self.steady_pieces, self. piece_animations,
                 self.last_choice_piece, self.highlight_paths, self.UIs, self.pressed_button,
-                self.active_menu if self.state == 'setting' else None)
+                self.active_menu if self.state == 'setting' or self.state == 'setting_wait' else None,
+                self.red_rate if self.show_ai_bar else -1)
+
+    def renew_score(self):
+        new_score = self.rater.score
+        if self.last_score != new_score:
+            self.last_score = new_score
+            if new_score[0] == 'score':
+                rat = max(0.05,min(0.95,0.5+new_score[1]/7000))
+            elif new_score[0] == 'mate':
+                if new_score[1] < 0:
+                    rat = 0
+                elif new_score[1] > 0:
+                    rat = 1
+                else:
+                    if ' w ' in self.board.fen:
+                        rat = 0
+                    else:
+                        rat = 1
+            else:
+                rat = self.red_rate
+            self.red_rate = rat
+
 
     def handle_menu_click(self, rx, ry):
         # element_button[type,rect,img_source,end_command,n,commands]
@@ -315,7 +349,7 @@ class Game:
             return
         self.state = 'wait'
         try:
-            move = self.board.get_best_move(movetime=tt)
+            move = self.board.get_best_move(think_time=tt)
         except RuntimeError:
             return
         self.apply_move(move)
@@ -327,12 +361,6 @@ class Game:
         if len(self.moves) != self.move_step:
             self.moves = self.moves[:self.move_step]
         self.moves.append(move)
-        # print(f"{self.board.eng.analyze(fen=self.board.fen, movetime=2070)}")
-        # print(f"Debug: {self.board.eng.这种评分评价他会把人的付出给异化掉的懂吗(
-        #     fen=self.board.fen,
-        #     user_move=move,
-        #     one_movetime=5000
-        # )}")  # TODO: debug
         if ((self.ai_chn and ' b ' in self.board.fen) or
             (self.ai_int and ' w ' in self.board.fen)):
             self.auto_move(True, tt = self.ai_think_time)
@@ -382,7 +410,7 @@ class Game:
             self.reset_special_pieces_show()
             self.apply_move(move)
             return
-        # 如果没选子或选了一样的，直接重置
+        # 如果没选子或选了一样的，重置
         if beach_p is None or beach_p == self.last_choice_piece[0]:
             self.reset_special_pieces_show()
             return
@@ -426,6 +454,7 @@ class Game:
                 self.piece_animations.append((4, 8, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
             if piece_typ >= 0:
                 self.piece_animations.append((tp, fp, 0, 10//ANIM_SPEED, piece_typ))
+            self.rater.refresh_fen(self.board.fen)
 
     def gret(self):
         if self.move_step < len(self.moves):
@@ -449,6 +478,7 @@ class Game:
             self.board.moves_reset(self.moves[:self.move_step])
             if self.board.get_pms()[1]:
                 self.do_checkmate_animation()
+            self.rater.refresh_fen(self.board.fen)
 
     def _tu(self,s):
         self.state = 'waits'
@@ -468,45 +498,50 @@ class Game:
 
     def quit(self):
         self.board.suicide()
+        self.rater.quit()
 
     def load(self):
         file_path = filedialog.askopenfilename(
             defaultextension=".binggo",
             initialdir='saves\\',
-            filetypes=[("BingGo存档文件", "*.binggo")]
+            filetypes=[("BingGo存档", "*.binggo")]
         )
         if file_path:
             with open(file_path, 'r', encoding='ascii') as file:
                 content = file.read()
-                try:
-                    rule_str, fen, moves = content.strip().split('|')
-                    new_ini = self.get_ini_by_rule_str(rule_str)
-                    with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:
-                        f.write(new_ini)
-                    self.config_setting_operations()
-                    self.board.reset(fen)
-                    _m = moves.split(' ')
-                    self.moves = _m if _m != [''] else []
-                    self.board.reboot_engine()
-                    self.board.moves_reset(self.moves)
-                    self.board.moves_reset([])
-                except Exception as e:
-                    print('存档文件损坏',e)
-                    self.board.reset(force=True)
-                    self.moves = []
-                    return
-                self.state = 'play'
-                self.move_step = 0
-                self.ai_chn = False
-                self.ai_int = False
+            self.state = 'setting_wait'
+            try:
+                rule_str, fen, moves = content.strip().split('|')
+                new_ini = self.get_ini_by_rule_str(rule_str)
+                with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:
+                    f.write(new_ini)
+                self.config_setting_operations()
+                self.board.reset(fen)
+                _m = moves.split(' ')
+                self.moves = _m if _m != [''] else []
+                self.board.reboot_engine()
+                self.rater.reboot()
+                self.board.moves_reset(self.moves)
+                self.board.moves_reset([])
+            except Exception as e:
+                print('存档文件损坏',e)
+                self.board.reset(force=True)
+                self.moves = []
+                self.state = 'setting'
                 return
+            self.state = 'play'
+            self.rater.refresh_fen(self.board.fen)
+            self.move_step = 0
+            self.ai_chn = False
+            self.ai_int = False
+            return
 
     def save(self):
         content = self.load_rule_str_from_ini() + '|' + self.board.initial_fen + '|' + ' '.join(self.moves)
         file_path = filedialog.asksaveasfilename(
             defaultextension=".binggo",
             initialdir='saves\\',
-            filetypes=[("BingGo存档文件", "*.binggo")]
+            filetypes=[("BingGo存档", "*.binggo")]
         )
         if file_path:
             with open(file_path, 'w', encoding='ascii') as file:
@@ -526,20 +561,23 @@ class Game:
         self.pressed_button = [-1, 0]
 
         self.moves = []
+        self.rater.refresh_fen(self.board.fen)
         self.move_step = 0
         self.ai_chn = False
         self.ai_int = False
         self.state = 'play'
 
-    def _plyngchng(self):
+    def _aec(self):
+        self.state = 'setting_wait'
         with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:
             f.write(self.ini_content)
         self.board.reboot_engine()
+        self.rater.reboot()
         self.reset()
         self.active_menu = main_menu
 
     def apply_engine_change(self):
-        Thread(target=self._plyngchng).start()
+        Thread(target=self._aec).start()
 
     def read_ini(self):
         with open('engine\\binggo.ini', 'r', encoding='UTF-8') as f:

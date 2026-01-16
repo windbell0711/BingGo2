@@ -1,5 +1,6 @@
 import subprocess
 import time
+from typing import Optional, Iterable
 
 BOARD_FILES = 'abcdefghi'
 BOARD_RANKS = '123456789'
@@ -16,16 +17,79 @@ def is_pgn(move: str) -> bool:
     return (move[0] in BOARD_FILES and move[2] in BOARD_FILES and
             move[1] in BOARD_RANKS and move[3] in BOARD_RANKS)
 
+def is_fen(fen: str) -> bool:
+    """检查是否符合FEN格式"""
+    parts = fen.strip().split()
+    if len(parts) != 6:
+        print("Invalid FEN: Invalid number of parts")
+        return False
+    piece_placement, active_color, castling, en_passant, halfmove, fullmove = parts
+    
+    ranks = piece_placement.split('/')
+    if len(ranks) != len(BOARD_RANKS):
+        print("Invalid FEN: Invalid number of ranks")
+        return False
+    valid_pieces = PIECE_TYPS_LOWER + PIECE_TYPS_LOWER.upper()
+    
+    for rank_idx, rank in enumerate(ranks):
+        file_count = 0
+        i = 0
+        while i < len(rank):
+            ch = rank[i]
+            if ch.isdigit():  # 数字表示空格
+                if i + 1 < len(rank) and rank[i+1].isdigit():  # 处理两位数
+                    num = int(ch + rank[i+1])
+                    i += 1
+                else:
+                    num = int(ch)
+                if num < 1 or num > len(BOARD_FILES):
+                    print(f"第{len(BOARD_RANKS)-rank_idx}行: 数字{num}超出范围(1-{len(BOARD_FILES)})")
+                    return False
+                file_count += num
+            elif ch in valid_pieces:  # 棋子
+                file_count += 1
+            else:  # 非法字符
+                print(f"第{len(BOARD_RANKS)-rank_idx}行: 非法字符 '{ch}'")
+                return False
+            i += 1
+        
+        if file_count != len(BOARD_FILES):
+            print(f"第{len(BOARD_RANKS)-rank_idx}行: 应有{len(BOARD_FILES)}列，实际有{file_count}列")
+            return False
+    
+    if active_color not in ('w', 'b'):
+        print(f"活动方应为'w'或'b'，实际是'{active_color}'")
+        return False
+    
+    if castling != '-':
+        for ch in castling:
+            if ch not in ('K', 'Q', 'k', 'q'):
+                print(f"王车易位包含非法字符 '{ch}'")
+                return False
+    
+    if en_passant != '-':
+        print("暂不支持过路兵")
+        return False
+    
+    if not halfmove.isdigit():
+        print(f"半回合计数不是有效整数: {halfmove}")
+        return False
+    if not fullmove.isdigit():
+        print(f"完整回合计数不是有效整数: {fullmove}")
+        return False
+    
+    return True
+
 
 class BinggoEngine:
     def __init__(self, 
-                 engine_path="engine\\fairy-stockfish-largeboards_x86-64-bmi2-latest.exe",  # 沿用BingGo beta 1.2使用的引擎，否则Pawn出现意外错误
-                 ini_file="engine\\binggo.ini"):
+                 engine_path: str = "engine\\fairy-stockfish-largeboards_x86-64-bmi2-latest.exe",  # 沿用BingGo beta 1.2使用的引擎，否则Pawn出现意外错误
+                 ini_file:    str = "engine\\binggo.ini",
+                 debug_file:  Optional[str] = None):
         """
         初始化引擎
         engine_path: 引擎可执行文件路径
         """
-        print("=== BINGGO VARIANT ENGINE ===")
         print(f"Starting engine: {engine_path}")
 
         self.proc = subprocess.Popen(
@@ -39,10 +103,10 @@ class BinggoEngine:
         self.wait_time = 0.001
 
         # 初始化引擎
-        self.ini_file_name = ini_file
-
         self._send_command("uci")
-        self._send_command(f"setoption name VariantPath value {self.ini_file_name}")
+        if debug_file:
+            self._send_command(f"setoption name Debug Log File value {debug_file}")
+        self._send_command(f"setoption name VariantPath value {ini_file}")
         self._send_command("setoption name UCI_Variant value binggo")
         self._send_command("ucinewgame")
         self._send_command("startpos")  # 必须给我加上！！
@@ -78,7 +142,8 @@ class BinggoEngine:
         else:
             raise AttributeError("Engine stdin is not available")
 
-    def _read_until(self, until: str, ignore=None, del_blank_lines=True) -> str:
+    def _read_until(self, until: str, ignore: Optional[Iterable[str]] = None, 
+                    del_blank_lines=True) -> str:
         """
         读取引擎输出直到遇到目标字符串
         :param until: 目标字符串
@@ -108,6 +173,10 @@ class BinggoEngine:
         self.proc.stdin.write(cmd + "\n")
         self.proc.stdin.flush()
         time.sleep(self.wait_time)
+    
+    def stop(self) -> None:
+        """终止思考"""
+        self._send_command("stop")
 
     @staticmethod
     def _extract_fen_from_board(board_output):
@@ -116,6 +185,21 @@ class BinggoEngine:
             if line.startswith("Fen:"):  # 查找包含"Fen:"的行
                 return line[4:].strip()
         return None
+    
+    @staticmethod
+    def _process_input_think_time(movetime, depth) -> str:
+        """
+        解析输入
+        @param movetime: 思考时间（毫秒）
+        @param depth: 搜索深度
+        @return: cmd
+        """
+        if depth > 0 and movetime > 0:
+            raise ValueError("Error: Please specify either movetime or depth")
+        if movetime == 207016001046:
+            return "go infinity"
+        else:
+            return f"go movetime {movetime}" if movetime > 0 else f"go depth {depth}"
 
     def _d(self) -> None:
         """输出并显示当前棋盘状态"""
@@ -123,7 +207,7 @@ class BinggoEngine:
         board_output = self._read_until("Chased", ignore=("Sfen", "Checkers", "Key", "Chased"))
         print(board_output)
 
-    def perform_move(self, fen: str, move: str | list[str]) -> str:
+    def perform_move(self, fen: str, move: str | Iterable[str]) -> str:
         """
         根据给定的FEN和走法，返回新的FEN
         :param fen:  起始局面的FEN字符串
@@ -131,6 +215,8 @@ class BinggoEngine:
         :return:     执行走法后的新FEN
         """
         # 处理输入
+        if not is_fen(fen):
+            raise ValueError(f"Warning: Invalid FEN: {fen}")
         if isinstance(move, list):
             moves = ""
             for m in move:
@@ -144,7 +230,7 @@ class BinggoEngine:
                 raise ValueError(f"Warning: Invalid PGN move: {move}")
             moves = move
         else:
-            raise TypeError("move must be str or list[str]")
+            raise TypeError("move must be str or Iterable[str]")
 
         # 设置局面并执行走法
         self._send_command(f"position fen {fen} moves {moves}")
@@ -153,6 +239,8 @@ class BinggoEngine:
         # 读取棋盘显示
         output = self._read_until("Chased")
         new_fen = self._extract_fen_from_board(output)
+        if new_fen == fen:
+            print(f"Warning: No change ({fen}) after move {moves}")
 
         if new_fen:
             return new_fen
@@ -166,6 +254,8 @@ class BinggoEngine:
         @param fen: 起始局面的FEN字符串
         @return: 所有合法走法的字符串列表
         """
+        if not is_fen(fen):
+            raise ValueError(f"Warning: Invalid FEN: {fen}")
         self._send_command(f"position fen {fen}")
         self._send_command("go perft 1")
         output = self._read_until("Nodes searched")
@@ -181,18 +271,21 @@ class BinggoEngine:
                     print(f"Warning: Invalid PGN move: {move}")
         return moves
 
-    def best_move(self, fen: str, movetime=2000) -> tuple[str, str] | tuple[None, None]:
+    def best_move(self, fen: str, movetime=0, depth=0) -> tuple[str, str] | tuple[None, None]:
         """
         从给定的FEN位置获取最佳走法
         @param fen: 起始局面的FEN字符串
         @param movetime: 思考时间(毫秒)
+        @param depth: 搜索深度
         @return: (best_move, new_fen): 最佳走法和执行走法后的新FEN
 
         出错则为None，请及时校验。
         """
+        if not is_fen(fen):
+            raise ValueError(f"Warning: Invalid FEN: {fen}")
         # 获取最佳走法
         self._send_command(f"position fen {fen}")
-        self._send_command(f"go movetime {movetime}")
+        self._send_command(self._process_input_think_time(movetime, depth))
         output = self._read_until("bestmove").strip()
         parts = output.split('\n')[-1].strip().split()
         if len(parts) > 1 and is_pgn(parts[1]):
@@ -211,10 +304,16 @@ class BinggoEngine:
         else:
             return None, None
 
-    def analyze(self, fen: str, movetime=2000) -> tuple[str, float, int] | tuple[None, None, None]:  # TODO
+    def analyze(self, fen: str, movetime=0, depth=0) -> tuple[str, int, str, int] | tuple[None, None, None, None]:  # TODO
+        if not is_fen(fen):
+            raise ValueError(f"Warning: Invalid FEN: {fen}")
+        # 解析mycamp
+        try: mycamp = {'w': 1, 'b': -1}[fen.strip().split()[1]]
+        except LookupError:
+            raise ValueError(f"Warning: Invalid FEN string: {fen}")
         # 获取输出
         self._send_command(f"position fen {fen}")
-        self._send_command(f"go movetime {movetime}")
+        self._send_command(self._process_input_think_time(movetime, depth))
         output = self._read_until("bestmove").strip()
         lines = output.split('\n')
         # 解析数据
@@ -223,30 +322,33 @@ class BinggoEngine:
             best_move = lines[-1].split()[1]
             assert lines[-2].startswith("info")
             _ = lines[-2].split()
-            score_cp =  int(_[_.index("cp") + 1]) / 100
             ana_depth = int(_[_.index("depth") + 1])
-            return best_move, score_cp, ana_depth
+            if "mate" in _:
+                return "mate",  int(_[_.index("mate") + 1]) * mycamp, best_move, ana_depth
+            else:
+                return "score", int(_[_.index("cp") + 1]) * mycamp,   best_move, ana_depth
         except (AssertionError, IndexError, ValueError) as e:
-            print(f"Warning: Invalid output from engine.\t{e.with_traceback}")
-            return None, None, None
+            print(f"Warning: Invalid output from engine. {e}")
+            return None, None, None, None
     
-    def 这种评分评价他会把人的付出给异化掉的懂吗(self, fen: str, user_move: str, one_movetime=2000) -> float | None:
+    def 这种评分评价他会把人的付出给异化掉的懂吗(self, fen: str, user_move: str, one_movetime=0, depth=0) -> float | None:
         # try: mycamp = {'w': 1, 'b': -1}[fen.strip().split()[1]]
         # except LookupError:
         #     raise ValueError(f"Warning: Invalid FEN string: {fen}")
-        if not is_pgn(user_move):
-            raise ValueError(f"Warning: Invalid PGN move: {user_move}")
-        best_move, before_score_cp, _ = self.analyze(fen, one_movetime)
-        if best_move == user_move:
-            return float("inf")
-        _, after_score_cp, _ = self.analyze(self.perform_move(fen, user_move))
-        if before_score_cp is None or after_score_cp is None:
-            print("Warning: Invalid score from engine.")
-            return None
-        print(f"{user_move}前评分: {before_score_cp}，后评分: {after_score_cp}")
-        print(f"{user_move=}, {best_move=}")
-        # return (after_score_cp + before_score_cp) * mycamp
-        return -(after_score_cp + before_score_cp)
+        # if not is_pgn(user_move):
+        #     raise ValueError(f"Warning: Invalid PGN move: {user_move}")
+        # , before_score_cp, best_move, _ = self.analyze(fen, one_movetime, depth)
+        # if best_move == user_move:
+        #     return float("inf")
+        # _, after_score_cp, _ = self.analyze(self.perform_move(fen, user_move), one_movetime, depth)
+        # if before_score_cp is None or after_score_cp is None:
+        #     print("Warning: Invalid score from engine.")
+        #     return None
+        # print(f"{user_move}前评分: {before_score_cp}，后评分: {after_score_cp}")
+        # print(f"{user_move=}, {best_move=}")
+        # # return (after_score_cp + before_score_cp) * mycamp
+        # return -(after_score_cp + before_score_cp)
+        raise NotImplementedError
 
     def close(self) -> None:
         """关闭引擎"""
@@ -257,52 +359,10 @@ class BinggoEngine:
         print("Engine closed.")
 
 
-def test():
-    # 初始化引擎
-    print("=== 测试 BinggoEngine 功能 ===")
-    eng = BinggoEngine()
-
-    # 初始FEN位置
-    ori_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
-    test_fen = 'rnbk1qnbr/pppp1pppp/9/9/4O4/O1O3O1O/1A5A1/9/CMXSWSXMC b kq - 0 1'
-
-    print("\n1. 测试走法生成功能:")
-    moves = eng.pms(test_fen)
-    print(f"在给定位置找到 {len(moves)} 个合法走法")
-    print(f"前10个走法: {moves[:10]}")
-
-    print("\n2. 测试执行走法功能:")
-    if moves:
-        first_move = moves[0]
-        print(f"执行走法: {first_move}")
-        new_fen = eng.perform_move(test_fen, first_move)
-        print(f"执行后的FEN: {new_fen}")
-
-    print("\n3. 测试最佳走法功能:")
-    best_move, best_new_fen = eng.best_move(ori_fen, movetime=1000)  # 1秒思考时间
-    if best_move:
-        print(f"最佳走法: {best_move}")
-        print(f"走法后的新FEN: {best_new_fen}")
-    else:
-        print("未能找到最佳走法")
-
-    print("\n4. 测试多个连续走法:")
-    if moves and len(moves) >= 2:
-        move1 = moves[0]
-        move2 = moves[1]
-        print(f"执行走法序列: [{move1}, {move2}]")
-        new_fen_seq = eng.perform_move(test_fen, [move1, move2])
-        print(f"执行序列后的新FEN: {new_fen_seq}")
-
-    print("\n5. 显示当前棋盘状态:")
-    eng._d()
-
-    eng.close()
-    print("\n=== 测试完成 ===")
-
-
 if __name__ == "__main__":
-    # test()
-    eng = BinggoEngine()
-    fen = "rnbk1qnbr/ppppOpppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
-    print("e8e9j" in eng.pms(fen))
+    eng = BinggoEngine(debug_file="debug.log")
+    root_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
+    # fen = eng.perform_move(root_fen, "a4b4 f9c6 h3a3 c9b7 g1e3 d9c9 b3c3 c6e4 h1f2 e4d5 c4c5 d5d2 c1d2 b7d6 a3a9".split())
+    # print(fen)
+    print(eng.analyze(root_fen, depth=8))
+    # eng._d()

@@ -79,10 +79,10 @@ class Beach:
         self.fen2beach(self.fen)
 
 
-    def get_best_move(self, movetime=2000):
+    def get_best_move(self, think_time = 2000):
         """ 当前局面引擎解法 """
         st = time.time()
-        move = self.eng.best_move(self.fen, movetime=movetime)[0]
+        move = self.eng.best_move(self.fen, movetime=think_time)[0]
         _t = time.time() - st
         if _t < 200:
             time.sleep(0.2)

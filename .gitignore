@@ -1,4 +1,8 @@
+.vscode/
+.idea/
+
 Fairy-Stockfish.wiki/
+variants.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
