@@ -34,6 +34,10 @@ with open("main_debug_report.txt", "a") as f:
     f.write("Opening game...\n")
     time.sleep(1)
 
-    from display import play
-
-    play()
+    try:
+        from display import play
+        play()
+    except Exception as e:
+        import traceback
+        logging.critical(traceback.format_exc())
+        raise e
