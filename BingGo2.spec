@@ -2,7 +2,7 @@
 # https://zhuanlan.zhihu.com/p/1987979560386576654
 
 a = Analysis(
-    ['main.py'],
+    ['main.py', 'main_debug.py'],
     pathex=['D:/Documents/Coding/BingGo2'],
     binaries=[],
     datas=[],

@@ -1,4 +1,3 @@
-import time
 import logging
 import pygame
 import sys
@@ -7,9 +6,9 @@ import constant as cns
 
 logger = logging.getLogger(__name__)
 
-import ctypes
-if sys.platform == 'win32':
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+# import ctypes
+# if sys.platform == 'win32':
+#     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 ## TEMP!!!
 n2c = {0:'将',1:'车',2:'马',3:'相',4:'士',5:'炮',6:'帅',7:'卒',8:'城',9:'教',10:'骑',11:'后',12:'王',13:'兵',14:'升变衬底',15:'将杀'}
@@ -70,8 +69,6 @@ def play():
 
     shade_count = 20
     bar_count = 0.5
-    frame_count = 0
-    frame_time_count = 0
 
     def adjust_max_pixel():
         nonlocal width, height, square_size, square_x, square_y, cell_size, size_adjust_rate
@@ -157,8 +154,6 @@ def play():
 
     reset_all_imgs()
     while running:
-        one_frame_count = time.time()
-
         number = None
         mouse_x, mouse_y = None, None
         clicked = False
@@ -365,25 +360,10 @@ def play():
 
         pygame.display.flip()
 
-        # 帧数自适应
-        this_frame_time = min(time.time()-one_frame_count, 0.05)
-        frame_time_count += this_frame_time
-        frame_count += 1
-        if frame_count > 20:
-            tps = 1/(frame_time_count/20)
-            if tps<75:
-                cns.FLIP_TICKS = 20
-                cns.ANIM_SPEED = 3
-            else:
-                cns.FLIP_TICKS = 60
-                cns.ANIM_SPEED = 1
-            frame_time_count = 0
-            frame_count = 0
-
         clock.tick(cns.FLIP_TICKS)
 
     with open('userdata\\display_setting.ini', 'w', encoding='ascii') as f:
-        f.write(str(width)+'|'+str(height))
+        f.write(str(int(width))+'|'+str(int(height)))
     pygame.quit()
     game.quit()
     sys.exit()

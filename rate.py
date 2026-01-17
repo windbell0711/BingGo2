@@ -2,13 +2,17 @@ import time
 import logging
 from threading import Thread
 import engine
+import constant as consts
 
 
 logger = logging.getLogger(__name__)
 
 class RatingSystem:
     def __init__(self):
-        self.eng = engine.BinggoEngine(debug_file="rate.log")
+        if consts.DEBUG:
+            self.eng = engine.BinggoEngine(debug_file="eng_rate.log")
+        else:
+            self.eng = engine.BinggoEngine()
         self.score = 0
         self.rating_thread = None
         self.fen = None
@@ -45,7 +49,10 @@ class RatingSystem:
         self.stop_current_rate()
         self.rating_thread.join()
         self.eng.close()
-        self.eng = engine.BinggoEngine(debug_file="rate.log")
+        if consts.DEBUG:
+            self.eng = engine.BinggoEngine(debug_file="eng_rate.log")
+        else:
+            self.eng = engine.BinggoEngine()
         self.do_rate = True
         self.thread_rate_begin()
 

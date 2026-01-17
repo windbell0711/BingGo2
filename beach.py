@@ -34,7 +34,10 @@ class Beach:
                 self.beach.append(c2p[char])
         self.fen = fen
         self.initial_fen = fen
-        self.eng = fsf.BinggoEngine()
+        if cns.DEBUG:
+            self.eng = fsf.BinggoEngine(debug_file="eng_beach.log")
+        else:
+            self.eng = fsf.BinggoEngine()
 
     def __getitem__(self, item):
         return self.beach[item]
@@ -113,4 +116,7 @@ class Beach:
 
     def reboot_engine(self):
         self.suicide()
-        self.eng = fsf.BinggoEngine()
+        if cns.DEBUG:
+            self.eng = fsf.BinggoEngine(debug_file="eng_beach.log")
+        else:
+            self.eng = fsf.BinggoEngine()
