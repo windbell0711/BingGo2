@@ -1,11 +1,12 @@
-import sys
-import pygame
 import time
+import pygame
+import sys
 import game as gm
+import constant as cns
 
-# import ctypes
-# if sys.platform == 'win32':
-#     ctypes.windll.shcore.SetProcessDpiAwareness(1)
+import ctypes
+if sys.platform == 'win32':
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 ## TEMP!!!
 n2c = {0:'将',1:'车',2:'马',3:'相',4:'士',5:'炮',6:'帅',7:'卒',8:'城',9:'教',10:'骑',11:'后',12:'王',13:'兵',14:'升变衬底',15:'将杀'}
@@ -47,17 +48,26 @@ def raise_size_of_rect(rect,side_length):
 def play():
     pygame.init()
     game = gm.Game()
-    width, height = 900, 600
+    try:
+        with open('userdata\\display_setting.ini', 'r', encoding='ascii') as f:
+            wh = f.read()
+            width, height = wh.split('|')
+            width = min(int(width), int(pygame.display.Info().current_w*0.8))
+            height = min(int(height), int(pygame.display.Info().current_h*0.8))
+    except:
+        width, height = 900, 600
     square_size = min(width, height)
     square_x = (width - square_size) // 2
     square_y = (height - square_size) // 2
     cell_size = square_size / 11
     line_w = int(cell_size / 20)
     size_adjust_rate = 1
-    MAX_SCREEN_PIXEL = 3000
+    MAX_SCREEN_PIXEL = 6000
 
-    shade_count = 0
+    shade_count = 20
     bar_count = 0.5
+    frame_count = 0
+    frame_time_count = 0
 
     def adjust_max_pixel():
         nonlocal width, height, square_size, square_x, square_y, cell_size, size_adjust_rate
@@ -91,7 +101,7 @@ def play():
     running = True
 
     # 贴图初始化
-    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF)
 
     background_image_original = pygame.image.load(f'{IMG_SOURCE}/background.png').convert_alpha()
 
@@ -99,7 +109,7 @@ def play():
 
     bar_img_original = pygame.image.load(f'{IMG_SOURCE}/rate_bar.png').convert_alpha()
 
-    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r','pressed','dot','empty_button']
+    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r','pressed','dot','empty_button','setting']
 
     name2piece_original_surface = {}
     name2piece_surface = {}
@@ -125,7 +135,6 @@ def play():
         background_and_board = pygame.Surface((width, height), pygame.SRCALPHA)
         pieces = pygame.Surface((width, height), pygame.SRCALPHA)
         settings = pygame.Surface((square_size, square_size), pygame.SRCALPHA)
-        print(width,height)
         # 此处包含贴图大小调整
         if width > height * 1.5:
             background_image = pygame.transform.scale(background_image_original, (width, width / 1.5))
@@ -135,7 +144,7 @@ def play():
         background_and_board.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
                                                      min(height - background_image.get_height(), 0)))
         background_and_board.blit(board_image, (square_x, square_y))
-        bar_img = pygame.transform.scale(bar_img_original, (cell_size*0.97, cell_size*7.3))
+        bar_img = pygame.transform.scale(bar_img_original, (cell_size*0.97, cell_size*7.35))
 
         for name_ in all_piece_img_names + list(n2c.values()):
             name2piece_surface[name_] = pygame.transform.scale(name2piece_original_surface[name_],
@@ -144,6 +153,8 @@ def play():
 
     reset_all_imgs()
     while running:
+        one_frame_count = time.time()
+
         number = None
         mouse_x, mouse_y = None, None
         clicked = False
@@ -152,7 +163,7 @@ def play():
                 running = False
             elif event.type == pygame.VIDEORESIZE:
                 width, height = event.w, event.h
-                screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF)
                 square_size = min(width, height)
                 square_x = (width - square_size) // 2
                 square_y = (height - square_size) // 2
@@ -176,15 +187,13 @@ def play():
                     number = 99
 
         pressed = pygame.mouse.get_pressed()[0]
-
-        st = time.time()
         last_flip = flipped
         flipped, steady, animations, last_choice, paths, UIs, pressed, menu, score = (
             game.handle_input_p(number, width, height, mouse_x, mouse_y, clicked, pressed))
 
         if menu is not None:
             if shade_count < 10:
-                shade_count += 1
+                shade_count = min(cns.ANIM_SPEED+shade_count, 10)
 
             settings.fill((0,0,0,0))
             screen.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
@@ -212,7 +221,7 @@ def play():
         else:
 
             if shade_count > 0:
-                shade_count -= 1
+                shade_count = max(shade_count-cns.ANIM_SPEED, 0)
 
             pieces.fill((0,0,0,0))
             if flipped ^ last_flip:
@@ -350,12 +359,24 @@ def play():
                     bg.fill((0, 0, 0, 100 * shade_count / 10))
                     screen.blit(bg, (0, 0))
 
-        if time.time()-st>0.01:
-            print(time.time()-st)
-
         pygame.display.flip()
-        clock.tick(60)
 
+        # 帧数自适应
+        this_frame_time = min(time.time()-one_frame_count, 0.05)
+        frame_time_count += this_frame_time
+        frame_count += 1
+        if frame_count > 20:
+            tps = 1/(frame_time_count/20)
+            tps = tps//10*10
+            cns.FLIP_TICKS = int(max(min(tps-10, 60),20))
+            cns.ANIM_SPEED = int(60//cns.FLIP_TICKS)
+            frame_time_count = 0
+            frame_count = 0
+
+        clock.tick(cns.FLIP_TICKS)
+
+    with open('userdata\\display_setting.ini', 'w', encoding='ascii') as f:
+        f.write(str(width)+'|'+str(height))
     pygame.quit()
     game.quit()
     sys.exit()

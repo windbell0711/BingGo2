@@ -1,5 +1,5 @@
 import time
-
+import constant as cns
 import engine as fsf
 
 c2p = {'J':0,'C':1,'M':2,'X':3,'S':4,'A':5,'W':6,'O':7,'r':8,'b':9,'n':10,'q':11,'k':12,'p':13}
@@ -8,7 +8,7 @@ p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q'
 a2n = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7,'i':8}
 n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
 
-initial_fen = 'rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1'
+initial_fen = cns.INITIAL_FEN
 # initial_fen = '3k5/C8/8C/9/9/9/9/1p7/5W3 w kq - 0 1'
 
 

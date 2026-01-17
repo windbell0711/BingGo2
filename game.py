@@ -2,8 +2,7 @@ import beach
 import rate
 from threading import Thread
 from tkinter import filedialog
-
-ANIM_SPEED = 1
+import constant as cns
 
 class SettingElement:
     def __init__(self, rect):
@@ -43,7 +42,7 @@ class Button(SettingElement):
 
     def tick_update(self,c,p):
         if not p:
-            self.shade_time = max(0, self.shade_time-1)
+            self.shade_time = max(0, self.shade_time-cns.ANIM_SPEED)
 
 def sort_menu_elements_rect(menu, element_per_line_max = 2):
     line_count = 0
@@ -137,10 +136,14 @@ class Game:
         # 游戏规则相关
         self.ai_chn = False
         self.ai_int = False
+        self.active_menu = main_menu
         self.ai_think_time = 1
         self.hint_think_time = 1000
-        self.active_menu = main_menu
         self.show_ai_bar = False
+        try:
+            self.load_user_setting()
+        except:
+            pass
         # 引擎ini相关
         self.ini_content = None
         self.promotion_allowed = None
@@ -291,13 +294,14 @@ class Game:
             self.state = 'setting'
 
     def do_checkmate_animation(self, delay = 10):
+        delay //= cns.ANIM_SPEED
         if ' w ' in self.board.fen:
             p = self.board.beach.index(6, 56)
-            self.piece_animations.append((p, p, 0, 20+delay, 6))
+            self.piece_animations.append((p, p, 0, 20//cns.ANIM_SPEED+delay, 6))
         else:
             p = self.board.beach.index(12)
-            self.piece_animations.append((p, p, 0, 20+delay, 12))
-        self.piece_animations.append((-2, p, -delay, 20, 15))
+            self.piece_animations.append((p, p, 0, 20//cns.ANIM_SPEED+delay, 12))
+        self.piece_animations.append((-2, p, -delay, 20//cns.ANIM_SPEED, 15))
 
     # 删除结束的动画，进度 +1
     def process_animation(self):
@@ -313,8 +317,9 @@ class Game:
     # 将静态棋子剔除动画结束位与选中位
     def process_steady_pieces(self):
         pieces_to_hide = {self.last_choice_piece[0]}
-        for _, end_pos, _, _, _ in self.piece_animations:
+        for st, end_pos, _, _, _ in self.piece_animations:
             pieces_to_hide.add(int(end_pos+0.5))
+            pieces_to_hide.add(int(st + 0.5))
         self.steady_pieces.clear()
         p = 0
         for typ in self.board:
@@ -339,7 +344,7 @@ class Game:
                 self.UIs.add((81, 'r' if self.ai_int else 'h'))
                 self.UIs.add((89, 'r' if self.ai_chn else 'h'))
         if self.pressed_button[-1] > 0 and not pressed:
-            self.pressed_button[-1] -= 1
+            self.pressed_button[-1] = max(0, self.pressed_button[-1] - cns.ANIM_SPEED)
 
     def _am(self, d=False, tt = 1000):
         if d:
@@ -426,11 +431,11 @@ class Game:
             p, typ = beach_p, self.board[beach_p]
             if typ >= 0:
                 if self.board_is_flipped:
-                    self.piece_animations.append((p - 0.15, p, 0, 3, typ))
-                    self.piece_animations.append((p, p - 0.15, -3, 3, typ))
+                    self.piece_animations.append((p - 0.15, p, 0, 3//cns.ANIM_SPEED, typ))
+                    self.piece_animations.append((p, p - 0.15, -3, 3//cns.ANIM_SPEED, typ))
                 else:
-                    self.piece_animations.append((p + 0.15, p, 0, 3, typ))
-                    self.piece_animations.append((p, p + 0.15, -3, 3, typ))
+                    self.piece_animations.append((p + 0.15, p, 0, 3//cns.ANIM_SPEED, typ))
+                    self.piece_animations.append((p, p + 0.15, -3, 3//cns.ANIM_SPEED, typ))
             return
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
@@ -444,16 +449,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//ANIM_SPEED,eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//cns.ANIM_SPEED,eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((2, 2, 0, 10//ANIM_SPEED, 8))
-                self.piece_animations.append((2, 0, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((2, 2, 0, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((2, 0, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((4, 4, 0, 10//ANIM_SPEED, 8))
-                self.piece_animations.append((4, 8, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((4, 4, 0, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((4, 8, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((tp, fp, 0, 10//ANIM_SPEED, piece_typ))
+                self.piece_animations.append((tp, fp, 0, 10//cns.ANIM_SPEED, piece_typ))
             self.rater.refresh_fen(self.board.fen)
 
     def gret(self):
@@ -464,16 +469,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//ANIM_SPEED, eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//cns.ANIM_SPEED, eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((0, 0, 0, 10//ANIM_SPEED, 8))
-                self.piece_animations.append((0, 2, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((0, 0, 0, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((0, 2, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((8, 8, 0, 10//ANIM_SPEED, 8))
-                self.piece_animations.append((8, 4, -10//ANIM_SPEED, 10//ANIM_SPEED, 8))
+                self.piece_animations.append((8, 8, 0, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((8, 4, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((fp, tp, 0, 10//ANIM_SPEED, piece_typ))
+                self.piece_animations.append((fp, tp, 0, 10//cns.ANIM_SPEED, piece_typ))
             self.move_step += 1
             self.board.moves_reset(self.moves[:self.move_step])
             if self.board.get_pms()[1]:
@@ -497,6 +502,7 @@ class Game:
         Thread(target=self._tg).start()
 
     def quit(self):
+        self.save_all_user_setting()
         self.board.suicide()
         self.rater.quit()
 
@@ -646,3 +652,40 @@ class Game:
         if rule_str[2] == '1':
             _i = _i.replace(not_allow_queen_infinite, allow_queen_infinite)
         return _i
+
+    def save_all_user_setting(self):
+        content = ''
+        content += str(self.ai_think_time)+'|'
+        content += str(self.hint_think_time)+'|'
+        content += ('1' if self.show_ai_bar else '0')+'|'
+        content += ('1' if self.board_is_flipped else '0')
+        with open('userdata\\rule_setting.ini','w',encoding='ascii') as f:
+            f.write(content)
+
+    def load_user_setting(self):
+        with open('userdata\\rule_setting.ini','r',encoding='ascii') as f:
+            content = f.read()
+        ai_tt, ht_tt, show_bar, flip = content.split('|')
+        if ai_tt == '40':
+            main_menu[2].n = 1
+            self.ai_think_time = 40
+        elif ai_tt == '500':
+            main_menu[2].n = 2
+            self.ai_think_time = 500
+        elif ai_tt == '1000':
+            main_menu[2].n = 3
+            self.ai_think_time = 1000
+        else:
+            main_menu[2].n = 0
+            self.ai_think_time = 1
+        if ht_tt == '500':
+            main_menu[3].n = 0
+            self.hint_think_time = 500
+        else:
+            main_menu[3].n = 1
+            self.hint_think_time = 1000
+        if show_bar == '1':
+            main_menu[7].n = 1
+            self.show_ai_bar = True
+        if flip == '1':
+            self.board_is_flipped = True

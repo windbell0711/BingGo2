@@ -92,14 +92,18 @@ class BinggoEngine:
         """
         print(f"Starting engine: {engine_path}")
 
-        self.proc = subprocess.Popen(
-            [engine_path],
-            universal_newlines=True,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            text=True,
-            bufsize=1  # 行缓冲
-        )
+        try:
+            self.proc = subprocess.Popen(
+                [engine_path],
+                universal_newlines=True,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                text=True,
+                bufsize=1  # 行缓冲
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Error: Engine file '{engine_path}' not found")
+        
         self.wait_time = 0.001
 
         # 初始化引擎
@@ -155,7 +159,7 @@ class BinggoEngine:
             assert isinstance(s, str), "ignore_lines must be a list of strings"
 
         output = ""
-        for _ in range(800):
+        for _ in range(2070):
             line = self._readline()
             if del_blank_lines and line.strip() == "":
                 continue
@@ -194,7 +198,7 @@ class BinggoEngine:
         @param depth: 搜索深度
         @return: cmd
         """
-        if depth > 0 and movetime > 0:
+        if not (depth > 0) ^ (movetime > 0):
             raise ValueError("Error: Please specify either movetime or depth")
         if movetime == 207016001046:
             return "go infinity"
@@ -331,25 +335,6 @@ class BinggoEngine:
             print(f"Warning: Invalid output from engine. {e}")
             return None, None, None, None
     
-    def 这种评分评价他会把人的付出给异化掉的懂吗(self, fen: str, user_move: str, one_movetime=0, depth=0) -> float | None:
-        # try: mycamp = {'w': 1, 'b': -1}[fen.strip().split()[1]]
-        # except LookupError:
-        #     raise ValueError(f"Warning: Invalid FEN string: {fen}")
-        # if not is_pgn(user_move):
-        #     raise ValueError(f"Warning: Invalid PGN move: {user_move}")
-        # , before_score_cp, best_move, _ = self.analyze(fen, one_movetime, depth)
-        # if best_move == user_move:
-        #     return float("inf")
-        # _, after_score_cp, _ = self.analyze(self.perform_move(fen, user_move), one_movetime, depth)
-        # if before_score_cp is None or after_score_cp is None:
-        #     print("Warning: Invalid score from engine.")
-        #     return None
-        # print(f"{user_move}前评分: {before_score_cp}，后评分: {after_score_cp}")
-        # print(f"{user_move=}, {best_move=}")
-        # # return (after_score_cp + before_score_cp) * mycamp
-        # return -(after_score_cp + before_score_cp)
-        raise NotImplementedError
-
     def close(self) -> None:
         """关闭引擎"""
         self._send_command("quit")
