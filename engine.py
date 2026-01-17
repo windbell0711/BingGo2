@@ -99,6 +99,7 @@ class BinggoEngine:
         try:
             self.proc = subprocess.Popen(
                 [engine_path],
+                creationflags=subprocess.CREATE_NO_WINDOW,  # https://blog.51cto.com/u_16175464/12403697
                 universal_newlines=True,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,

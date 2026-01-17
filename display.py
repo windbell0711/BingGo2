@@ -1,8 +1,11 @@
 import logging
 import pygame
-import sys
+import sys, os
+from tkinter import messagebox
 import game as gm
 import constant as cns
+
+game = gm.Game()
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,6 @@ def raise_size_of_rect(rect,side_length):
 
 def play():
     pygame.init()
-    game = gm.Game()
     try:
         with open('userdata\\display_setting.ini', 'r', encoding='ascii') as f:
             wh = f.read()
@@ -102,30 +104,53 @@ def play():
     running = True
 
     # 贴图初始化
+    img_loss = False
     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF)
+    try:
+        background_image_original = pygame.image.load(f'{IMG_SOURCE}/background.png').convert_alpha()
+    except FileNotFoundError:
+        background_image_original = pygame.Surface((1,1))
+        img_loss = True
+    try:
+        board_image_original = pygame.image.load(f'{IMG_SOURCE}/board.png').convert_alpha()
+    except FileNotFoundError:
+        board_image_original = pygame.Surface((1, 1))
+        img_loss = True
+    try:
+        bar_img_original = pygame.image.load(f'{IMG_SOURCE}/rate_bar.png').convert_alpha()
+    except FileNotFoundError:
+        bar_img_original = pygame.Surface((1, 1))
+        img_loss = True
 
-    background_image_original = pygame.image.load(f'{IMG_SOURCE}/background.png').convert_alpha()
-
-    board_image_original = pygame.image.load(f'{IMG_SOURCE}/board.png').convert_alpha()
-
-    bar_img_original = pygame.image.load(f'{IMG_SOURCE}/rate_bar.png').convert_alpha()
-
-    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r','pressed','dot','empty_button','setting']
+    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r',
+                           'pressed','dot','empty_button','setting','empty_piece']
 
     name2piece_original_surface = {}
     name2piece_surface = {}
     for name in all_piece_img_names:
-        name2piece_original_surface[name] = pygame.image.load(f'{IMG_SOURCE}/{name}.png').convert_alpha()
-    font = pygame.font.Font(FONT, 500)
+        try:
+            name2piece_original_surface[name] = pygame.image.load(f'{IMG_SOURCE}/{name}.png').convert_alpha()
+        except FileNotFoundError:
+            name2piece_original_surface[name] = pygame.Surface((1, 1))
+            img_loss = True
+    try:
+        font = pygame.font.Font(FONT, 500)
+    except FileNotFoundError:
+        messagebox.showerror('警告','字体文件缺失。你可以重新下载游戏解决此问题。')
+        raise FileNotFoundError
     for typ, name in zip(n2c.keys(),n2c.values()):
         try:
             name2piece_original_surface[name] = pygame.image.load(f'{IMG_SOURCE}/{name}.png').convert_alpha()
         except FileNotFoundError:
-            tmps = pygame.image.load(f'{IMG_SOURCE}/empty_piece.png').convert_alpha()
+            tmps = name2piece_original_surface['empty_piece'].copy()
             text_surface = font.render(n2c[typ], True, (20, 20, 20) if typ > 7 else (137, 57, 37))
             tmps.blit(text_surface,(110,110))
             name2piece_original_surface[name] = tmps
     background_and_board = board_image = background_image = pieces = small_screen = settings = bar_img = pygame.Surface((0,0))
+
+    if img_loss:
+        messagebox.showerror('警告', '缺失图片文件，游戏依旧可以运行。你可以重新下载游戏解决此问题。')
+    del img_loss
 
     pygame.display.set_icon(name2piece_original_surface['帅'])
 
@@ -362,8 +387,11 @@ def play():
 
         clock.tick(cns.FLIP_TICKS)
 
+    if not os.path.exists('userdata'):
+        os.mkdir('userdata')
     with open('userdata\\display_setting.ini', 'w', encoding='ascii') as f:
         f.write(str(int(width))+'|'+str(int(height)))
+
     pygame.quit()
     game.quit()
     sys.exit()

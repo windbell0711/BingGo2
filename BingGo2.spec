@@ -2,7 +2,7 @@
 # https://zhuanlan.zhihu.com/p/1987979560386576654
 
 a = Analysis(
-    ['main.py', 'main_debug.py'],
+    ['main.py'],
     pathex=['D:/Documents/Coding/BingGo2'],
     binaries=[],
     datas=[],
@@ -31,7 +31,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,  # Console
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

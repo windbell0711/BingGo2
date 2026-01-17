@@ -1,9 +1,12 @@
 import logging
-import beach
-import rate
+import os
 from threading import Thread
 from tkinter import filedialog
+
+import beach
+import rate
 import constant as cns
+
 
 logger = logging.getLogger(__name__)
 
@@ -667,6 +670,8 @@ class Game:
         content += str(self.hint_think_time)+'|'
         content += ('1' if self.show_ai_bar else '0')+'|'
         content += ('1' if self.board_is_flipped else '0')
+        if not os.path.exists('userdata'):
+            os.mkdir('userdata')
         with open('userdata\\rule_setting.ini','w',encoding='ascii') as f:
             f.write(content)
 

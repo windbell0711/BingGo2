@@ -22,11 +22,11 @@ class RatingSystem:
     def _tr(self):
         while self.do_rate:
             try:
-                self.score = self.eng.analyze(self.fen,movetime=self.rating_time)
+                self.score = self.eng.analyze(self.fen, movetime=self.rating_time)
             except RuntimeError as e:
                 logger.warning(f"Runtime error during analysis: {e}")
             except Exception as e:
-                logger.error(f"Unexpected error during analysis: {e}")
+                self.quit()
             if self.rating_time < 10000:
                 self.rating_time *= 2
             else:
