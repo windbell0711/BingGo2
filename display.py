@@ -1,8 +1,11 @@
 import time
+import logging
 import pygame
 import sys
 import game as gm
 import constant as cns
+
+logger = logging.getLogger(__name__)
 
 import ctypes
 if sys.platform == 'win32':
@@ -54,7 +57,8 @@ def play():
             width, height = wh.split('|')
             width = min(int(width), int(pygame.display.Info().current_w*0.8))
             height = min(int(height), int(pygame.display.Info().current_h*0.8))
-    except:
+    except Exception as e:
+        logger.warning(f"读取显示设置失败，使用默认值: {e}")
         width, height = 900, 600
     square_size = min(width, height)
     square_x = (width - square_size) // 2
@@ -367,9 +371,12 @@ def play():
         frame_count += 1
         if frame_count > 20:
             tps = 1/(frame_time_count/20)
-            tps = tps//10*10
-            cns.FLIP_TICKS = int(max(min(tps-10, 60),20))
-            cns.ANIM_SPEED = int(60//cns.FLIP_TICKS)
+            if tps<75:
+                cns.FLIP_TICKS = 20
+                cns.ANIM_SPEED = 3
+            else:
+                cns.FLIP_TICKS = 60
+                cns.ANIM_SPEED = 1
             frame_time_count = 0
             frame_count = 0
 

@@ -1,6 +1,9 @@
 import time
+import logging
 import constant as cns
 import engine as fsf
+
+logger = logging.getLogger(__name__)
 
 c2p = {'J':0,'C':1,'M':2,'X':3,'S':4,'A':5,'W':6,'O':7,'r':8,'b':9,'n':10,'q':11,'k':12,'p':13}
 p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q',12:'k',13:'p',-1:''}
@@ -36,7 +39,7 @@ class Beach:
     def __getitem__(self, item):
         return self.beach[item]
 
-    def __setitem__(self, key, value):
+    def __setitem__(key, value):
         self.beach[key] = value
         self.beach2fen()
 
@@ -51,7 +54,9 @@ class Beach:
             else:
                 self.beach.append(c2p[char])
         if len(self.beach) != 81:
-            raise IndexError('beach must contain 81 elements')
+            error_msg = 'beach must contain 81 elements'
+            logger.error(error_msg)
+            raise IndexError(error_msg)
 
     def beach2fen(self):
         pieces = ''; n = 0; lc = 0

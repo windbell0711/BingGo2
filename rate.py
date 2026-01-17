@@ -1,7 +1,10 @@
 import time
+import logging
 from threading import Thread
 import engine
 
+
+logger = logging.getLogger(__name__)
 
 class RatingSystem:
     def __init__(self):
@@ -16,8 +19,10 @@ class RatingSystem:
         while self.do_rate:
             try:
                 self.score = self.eng.analyze(self.fen,movetime=self.rating_time)
-            except RuntimeError:
-                pass
+            except RuntimeError as e:
+                logger.warning(f"Runtime error during analysis: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error during analysis: {e}")
             if self.rating_time < 10000:
                 self.rating_time *= 2
             else:

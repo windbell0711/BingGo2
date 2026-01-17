@@ -3,8 +3,8 @@ import time
 import logging
 from typing import Optional, Iterable
 
-# 配置基本的日志记录器
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# 获取模块专用logger
+logger = logging.getLogger(__name__)
 
 BOARD_FILES = 'abcdefghi'
 BOARD_RANKS = '123456789'
@@ -25,13 +25,13 @@ def is_fen(fen: str) -> bool:
     """检查是否符合FEN格式"""
     parts = fen.strip().split()
     if len(parts) != 6:
-        logging.warning("Invalid FEN: Invalid number of parts")
+        logger.warning("Invalid FEN: Invalid number of parts")
         return False
     piece_placement, active_color, castling, en_passant, halfmove, fullmove = parts
     
     ranks = piece_placement.split('/')
     if len(ranks) != len(BOARD_RANKS):
-        logging.warning("Invalid FEN: Invalid number of ranks")
+        logger.warning("Invalid FEN: Invalid number of ranks")
         return False
     valid_pieces = PIECE_TYPS_LOWER + PIECE_TYPS_LOWER.upper()
     
@@ -47,39 +47,39 @@ def is_fen(fen: str) -> bool:
                 else:
                     num = int(ch)
                 if num < 1 or num > len(BOARD_FILES):
-                    logging.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 数字{num}超出范围(1-{len(BOARD_FILES)})")
+                    logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 数字{num}超出范围(1-{len(BOARD_FILES)})")
                     return False
                 file_count += num
             elif ch in valid_pieces:  # 棋子
                 file_count += 1
             else:  # 非法字符
-                logging.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 非法字符 '{ch}'")
+                logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 非法字符 '{ch}'")
                 return False
             i += 1
         
         if file_count != len(BOARD_FILES):
-            logging.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 应有{len(BOARD_FILES)}列，实际有{file_count}列")
+            logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 应有{len(BOARD_FILES)}列，实际有{file_count}列")
             return False
     
     if active_color not in ('w', 'b'):
-        logging.warning(f"活动方应为'w'或'b'，实际是'{active_color}'")
+        logger.warning(f"活动方应为'w'或'b'，实际是'{active_color}'")
         return False
     
     if castling != '-':
         for ch in castling:
             if ch not in ('K', 'Q', 'k', 'q'):
-                logging.warning(f"王车易位包含非法字符 '{ch}'")
+                logger.warning(f"王车易位包含非法字符 '{ch}'")
                 return False
     
     if en_passant != '-':
-        logging.warning("暂不支持过路兵")
+        logger.info("暂不支持过路兵")
         return False
     
     if not halfmove.isdigit():
-        logging.warning(f"半回合计数不是有效整数: {halfmove}")
+        logger.warning(f"半回合计数不是有效整数: {halfmove}")
         return False
     if not fullmove.isdigit():
-        logging.warning(f"完整回合计数不是有效整数: {fullmove}")
+        logger.warning(f"完整回合计数不是有效整数: {fullmove}")
         return False
     
     return True
@@ -94,7 +94,7 @@ class BinggoEngine:
         初始化引擎
         engine_path: 引擎可执行文件路径
         """
-        logging.info(f"Starting engine: {engine_path}")
+        logger.info(f"Starting engine: {engine_path}")
 
         try:
             self.proc = subprocess.Popen(
@@ -106,8 +106,9 @@ class BinggoEngine:
                 bufsize=1  # 行缓冲
             )
         except FileNotFoundError:
-            logging.error(f"Error: Engine file '{engine_path}' not found")
-            raise FileNotFoundError(f"Error: Engine file '{engine_path}' not found")
+            error_msg = f"Error: Engine file '{engine_path}' not found"
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
         
         self.wait_time = 0.001
 
@@ -132,7 +133,7 @@ class BinggoEngine:
 
         # 等待引擎初始化完成
         self._wait_for_ready()
-        logging.info("Engine initialized and ready!")
+        logger.debug("Engine initialized and ready!")
 
     def _wait_for_ready(self):
         """等待引擎准备就绪"""
@@ -149,8 +150,9 @@ class BinggoEngine:
         if self.proc.stdout:
             return self.proc.stdout.readline()
         else:
-            logging.error("Engine stdin is not available")
-            return ""
+            error_msg = "Engine stdout is not available"
+            logger.error(error_msg)
+            raise AttributeError(error_msg)
 
     def _read_until(self, until: str, ignore: Optional[Iterable[str]] = None, 
                     del_blank_lines=True) -> str:
@@ -173,13 +175,12 @@ class BinggoEngine:
                 output += line
             if until in line:
                 return output
-        logging.error(f"Too many lines to read without finding '{until}'")
-        return ""
-    
+        raise RuntimeError(f"Too many lines to read without finding '{until}'")
+
     def _send_command(self, cmd: str) -> None:
         """发送命令到引擎"""
         if not self.proc.stdin:
-            logging.warning("Warning: Engine stdin not available")
+            logger.warning("Warning: Engine stdin not available")
             return
         self.proc.stdin.write(cmd + "\n")
         self.proc.stdin.flush()
@@ -206,8 +207,9 @@ class BinggoEngine:
         @return: cmd
         """
         if not (depth > 0) ^ (movetime > 0):
-            logging.error("Error: Please specify either movetime or depth")
-            return ""
+            error_msg = "Error: Please specify either movetime or depth"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         if movetime == 207016001046:
             return "go infinity"
         else:
@@ -217,7 +219,7 @@ class BinggoEngine:
         """输出并显示当前棋盘状态"""
         self._send_command("d")
         board_output = self._read_until("Chased", ignore=("Sfen", "Checkers", "Key", "Chased"))
-        logging.info(board_output)
+        logger.info(board_output)
 
     def perform_move(self, fen: str, move: str | Iterable[str]) -> str:
         """
@@ -228,24 +230,29 @@ class BinggoEngine:
         """
         # 处理输入
         if not is_fen(fen):
-            logging.error(f"Invalid FEN: {fen}")
-            return ""
+            warning_msg = f"Warning: Invalid FEN: {fen}"
+            logger.warning(warning_msg)
+            raise ValueError(warning_msg)
         if isinstance(move, list):
             moves = ""
             for m in move:
                 if is_pgn(m):
                     moves += m + " "
                 else:
-                    logging.error(f"Warning: Invalid PGN move: {m}")
-                    return ""
+                    warning_msg = f"Warning: Invalid PGN move: {m}"
+                    logger.warning(warning_msg)
+                    raise ValueError(warning_msg)
             moves = moves.strip()
         elif isinstance(move, str):
             if not is_pgn(move):
-                logging.error(f"Warning: Invalid PGN move: {move}")
-                return ""
+                warning_msg = f"Warning: Invalid PGN move: {move}"
+                logger.warning(warning_msg)
+                raise ValueError(warning_msg)
             moves = move
         else:
-            raise TypeError("move must be str or Iterable[str]")
+            error_msg = "move must be str or Iterable[str]"
+            logger.error(error_msg)
+            raise TypeError(error_msg)
 
         # 设置局面并执行走法
         self._send_command(f"position fen {fen} moves {moves}")
@@ -255,12 +262,13 @@ class BinggoEngine:
         output = self._read_until("Chased")
         new_fen = self._extract_fen_from_board(output)
         if new_fen == fen:
-            logging.warning(f"Warning: No change ({fen}) after move {moves}")
+            logger.warning(f"Warning: No change ({fen}) after move {moves}")
 
         if new_fen:
             return new_fen
         else:
-            logging.error(f"Error: Could not extract FEN after move {moves}")
+            error_msg = f"Error: Could not extract FEN after move {moves}"
+            logger.error(error_msg)
             return fen
 
     def pms(self, fen: str) -> list[str]:
@@ -270,8 +278,9 @@ class BinggoEngine:
         @return: 所有合法走法的字符串列表
         """
         if not is_fen(fen):
-            logging.warning(f"Warning: Invalid FEN: {fen}")
-            return []
+            warning_msg = f"Warning: Invalid FEN: {fen}"
+            logger.warning(warning_msg)
+            raise ValueError(warning_msg)
         self._send_command(f"position fen {fen}")
         self._send_command("go perft 1")
         output = self._read_until("Nodes searched")
@@ -284,7 +293,7 @@ class BinggoEngine:
                 if is_pgn(move):
                     moves.append(move)
                 else:
-                    logging.warning(f"Warning: Invalid PGN move: {move}")
+                    logger.warning(f"Warning: Invalid PGN move: {move}")
         return moves
 
     def best_move(self, fen: str, movetime=0, depth=0) -> tuple[str, str] | tuple[None, None]:
@@ -298,8 +307,9 @@ class BinggoEngine:
         出错则为None，请及时校验。
         """
         if not is_fen(fen):
-            logging.error(f"Warning: Invalid FEN: {fen}")
-            return None, None
+            warning_msg = f"Warning: Invalid FEN: {fen}"
+            logger.warning(warning_msg)
+            raise ValueError(warning_msg)
         # 获取最佳走法
         self._send_command(f"position fen {fen}")
         self._send_command(self._process_input_think_time(movetime, depth))
@@ -308,7 +318,7 @@ class BinggoEngine:
         if len(parts) > 1 and is_pgn(parts[1]):
             best_move = parts[1]
         else:
-            logging.error(f"Warning: No best move found for FEN {fen}")
+            logger.warning(f"Warning: No best move found for FEN {fen}")
             return None, None
 
         # 应用走法并获取新FEN
@@ -323,13 +333,15 @@ class BinggoEngine:
 
     def analyze(self, fen: str, movetime=0, depth=0) -> tuple[str, int, str, int] | tuple[None, None, None, None]:  # TODO
         if not is_fen(fen):
-            logging.error(f"Warning: Invalid FEN: {fen}")
-            return None, None, None, None
+            warning_msg = f"Warning: Invalid FEN: {fen}"
+            logger.warning(warning_msg)
+            raise ValueError(warning_msg)
         # 解析mycamp
         try: mycamp = {'w': 1, 'b': -1}[fen.strip().split()[1]]
         except LookupError:
-            logging.error(f"Warning: Invalid FEN string: {fen}")
-            return None, None, None, None
+            warning_msg = f"Warning: Invalid FEN string: {fen}"
+            logger.warning(warning_msg)
+            raise ValueError(warning_msg)
         # 获取输出
         self._send_command(f"position fen {fen}")
         self._send_command(self._process_input_think_time(movetime, depth))
@@ -347,7 +359,7 @@ class BinggoEngine:
             else:
                 return "score", int(_[_.index("cp") + 1]) * mycamp,   best_move, ana_depth
         except (AssertionError, IndexError, ValueError) as e:
-            logging.error(f"Warning: Invalid output from engine. {e}")
+            logger.warning(f"Warning: Invalid output from engine. {e}")
             return None, None, None, None
     
     def close(self) -> None:
@@ -356,7 +368,7 @@ class BinggoEngine:
         time.sleep(0.2)
         self.proc.terminate()
         self.proc.wait()
-        logging.info("Engine closed.")
+        logger.info("Engine closed.")
 
 
 if __name__ == "__main__":
@@ -364,5 +376,5 @@ if __name__ == "__main__":
     root_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
     # fen = eng.perform_move(root_fen, "a4b4 f9c6 h3a3 c9b7 g1e3 d9c9 b3c3 c6e4 h1f2 e4d5 c4c5 d5d2 c1d2 b7d6 a3a9".split())
     # print(fen)
-    logging.info(eng.analyze(root_fen, depth=8))
+    logger.info(eng.analyze(root_fen, depth=8))
     # eng._d()

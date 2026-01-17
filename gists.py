@@ -5,8 +5,11 @@ https://gitee.com/api/v5/swagger#/getV5Gists
 """
 import requests
 import time
+import logging
 from typing import Dict, Optional, Any
 
+# 获取模块专用logger
+logger = logging.getLogger(__name__)
 
 class Gist:
     """Gist客户端类，封装Gitee Gist的API操作"""
@@ -45,10 +48,10 @@ class Gist:
                     self.last_read_content[file_name] = files[file_name]
                 return self.gist_id
             else:
-                print(f"创建会话失败，状态码：{response.status_code}")
-                print(response.text)
+                logger.error(f"创建会话失败，状态码：{response.status_code}")
+                logger.error(response.text)
         except Exception as e:
-            print(f"网络错误：{str(e)}")
+            logger.error(f"网络错误：{str(e)}")
         
         return None
     
@@ -59,7 +62,7 @@ class Gist:
         :return data: 获取的Gist数据字典，成功返回字典，失败返回None
         """
         if not self.gist_id:
-            print("错误：未设置gist_id")
+            logger.error("错误：未设置gist_id")
             return None
             
         try:
@@ -68,9 +71,9 @@ class Gist:
             if response.status_code == 200:
                 return response.json()
             else:
-                print(f"获取Gist数据失败，状态码：{response.status_code}")
+                logger.error(f"获取Gist数据失败，状态码：{response.status_code}")
         except Exception as e:
-            print(f"网络错误：{str(e)}")
+            logger.error(f"网络错误：{str(e)}")
         
         return None
     
@@ -118,14 +121,14 @@ class Gist:
             try:
                 current_content = self.read_file(file_name)
                 if current_content != last_content:
-                    print(f"文件 '{file_name}' 已更新")
+                    logger.info(f"文件 '{file_name}' 已更新")
                     self.last_read_content[file_name] = current_content
                     return current_content
             except FileNotFoundError:
                 # 文件可能被删除，但之前存在过，所以等待它重新出现
                 pass
             except Exception as e:
-                print(f"读取文件时出错：{str(e)}")
+                logger.error(f"读取文件时出错：{str(e)}")
             
             time.sleep(check_interval)
     
@@ -139,7 +142,7 @@ class Gist:
         :raises FileNotFoundError: 文件不存在时抛出
         """
         if not self.gist_id:
-            print("错误：未设置gist_id")
+            logger.error("错误：未设置gist_id")
             return False
         
         # 首先检查文件是否存在
@@ -162,13 +165,13 @@ class Gist:
             if response.status_code == 200:
                 # 更新上次读取内容
                 self.last_read_content[file_name] = content
-                print(f"文件 '{file_name}' 写入成功")
+                logger.info(f"文件 '{file_name}' 写入成功")
                 return True
             else:
-                print(f"写入文件失败，状态码：{response.status_code}")
-                print(response.text)
+                logger.error(f"写入文件失败，状态码：{response.status_code}")
+                logger.error(response.text)
         except Exception as e:
-            print(f"网络错误：{str(e)}")
+            logger.error(f"网络错误：{str(e)}")
         
         return False
     
@@ -215,9 +218,9 @@ class Gist:
                             if "waiting" in file_info.get("content", ""):
                                 return gist.get("id")
             else:
-                print(f"查找会话失败，状态码：{response.status_code}")
+                logger.error(f"查找会话失败，状态码：{response.status_code}")
         except Exception as e:
-            print(f"网络错误：{str(e)}")
+            logger.error(f"网络错误：{str(e)}")
         
         return None
 
@@ -229,7 +232,7 @@ if __name__ == "__main__":
     gist = Gist(ACCESS_TOKEN)
     
     # 检查网络连接
-    print(f"网络连接: {gist.check_internet()}")
+    logger.info(f"网络连接: {gist.check_internet()}")
     
     # 示例1: 创建会话
     room_name = "test_room"
@@ -241,26 +244,26 @@ if __name__ == "__main__":
     
     gist_id = gist.create_session(room_name, initial_files)
     if gist_id:
-        print(f"会话创建成功，ID: {gist_id}")
+        logger.info(f"会话创建成功，ID: {gist_id}")
         gist.gist_id = gist_id  # 设置当前操作的gist_id
     else:
-        print("会话创建失败")
+        logger.error("会话创建失败")
         # 使用示例gist_id进行后续测试
         gist.gist_id = "existing_gist_id_here"
     
     try:
         # 示例2: 读取文件
         content = gist.read_file("status.txt")
-        print(f"{gist.read_file("status.txt") = }")
-        print(f"{gist.read_file("player1.txt") = }")
-        print(f"{gist.read_file("player2.txt") = }")
+        logger.info(f"{gist.read_file('status.txt') = }")
+        logger.info(f"{gist.read_file('player1.txt') = }")
+        logger.info(f"{gist.read_file('player2.txt') = }")
         
         # 示例3: 写入文件
         success = gist.write_file("player1.txt", "啊啊啊啊要不行了")
-        print(f"写入结果: {success}")
-        print(f"{gist.read_file("status.txt") = }")
-        print(f"{gist.read_file("player1.txt") = }")
-        print(f"{gist.read_file("player2.txt") = }")
+        logger.info(f"写入结果: {success}")
+        logger.info(f"{gist.read_file('status.txt') = }")
+        logger.info(f"{gist.read_file('player1.txt') = }")
+        logger.info(f"{gist.read_file('player2.txt') = }")
         
         # 示例4: 等待文件更新（需要另一个进程或手动更新文件内容）
         # print("等待player2.txt更新...")
@@ -269,9 +272,9 @@ if __name__ == "__main__":
         # print(f"更新后的内容: {updated_content}")
         
     except FileNotFoundError as e:
-        print(f"文件错误: {e}")
+        logger.error(f"文件错误: {e}")
     
     # 示例5: 查找会话
     session_id = gist.find_session_id("test_room")
     if session_id:
-        print(f"找到会话ID: {session_id}")
+        logger.info(f"找到会话ID: {session_id}")

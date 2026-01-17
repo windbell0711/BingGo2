@@ -1,15 +1,20 @@
+import logging
 import beach
 import rate
 from threading import Thread
 from tkinter import filedialog
 import constant as cns
 
+logger = logging.getLogger(__name__)
+
 class SettingElement:
     def __init__(self, rect):
         if rect is not None:
             for i in rect:
                 if not 0<=i<=1:
-                    raise ValueError("rect参数错误")
+                    error_msg = "rect参数错误"
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
         self.rect = rect
 
     def is_clicked(self, x, y):
@@ -26,7 +31,9 @@ class Button(SettingElement):
         super().__init__(rect)
         self.n = n; self.commands = commands; self.texts = texts
         if len(commands) != len(texts):
-            raise ValueError("commands和texts长度不一致")
+            error_msg = "commands和texts长度不一致"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         self.length = len(commands)
         self.shade_time_max = shade_time_max
         self.shade_time = 0
@@ -102,7 +109,7 @@ promotionPawnTypesWhite = o
 promotionPieceTypesWhite = jcaxsm
 promotionRegionWhite = *9
 ; promo'''
-not_allowed_pro='; promo\npawnTypes = p\n; promo'
+not_allowed_pro='; promo\npawnTypes = p\n; promo'''
 
 not_allow_king_in_palace = '''; king_mov
 mobilityRegionBlackKing  = a1 a2 a3 b1 b2 b3 c1 c2 c3 g1 g2 g3 h1 h2 h3 i1 i2 i3 *4 *5 *6 *7 *8 *9
@@ -142,8 +149,8 @@ class Game:
         self.show_ai_bar = False
         try:
             self.load_user_setting()
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"加载用户设置失败: {e}")
         # 引擎ini相关
         self.ini_content = None
         self.promotion_allowed = None
@@ -356,6 +363,7 @@ class Game:
         try:
             move = self.board.get_best_move(think_time=tt)
         except RuntimeError:
+            logger.warning("Runtime error during AI move calculation")
             return
         self.apply_move(move)
 
@@ -530,7 +538,7 @@ class Game:
                 self.board.moves_reset(self.moves)
                 self.board.moves_reset([])
             except Exception as e:
-                print('存档文件损坏',e)
+                logger.error(f'存档文件损坏: {e}')
                 self.board.reset(force=True)
                 self.moves = []
                 self.state = 'setting'
@@ -644,7 +652,7 @@ class Game:
 
     def get_ini_by_rule_str(self, rule_str):
         _i = self.config_ini_content
-        print(rule_str)
+        logger.info(rule_str)
         if rule_str[0] == '1':
             _i = _i.replace(not_allowed_pro, allowed_pro)
         if rule_str[1] == '1':
