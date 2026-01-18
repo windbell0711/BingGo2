@@ -2,8 +2,9 @@ import logging
 import pygame
 import sys, os
 from tkinter import messagebox
-import game as gm
-import constant as cns
+
+from src import game as gm
+from src import constant as cns
 
 game = gm.Game()
 

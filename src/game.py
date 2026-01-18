@@ -1,11 +1,12 @@
 import logging
 import os
+import webbrowser
 from threading import Thread
 from tkinter import filedialog, messagebox
 
-import beach
-import rate
-import constant as cns
+from src import beach
+from src import rate
+from src import constant as cns
 
 
 logger = logging.getLogger(__name__)
@@ -78,31 +79,35 @@ def sort_menu_elements_rect(menu, element_per_line_max = 2):
             per_line_count = 0
 
 main_menu =  [
-             Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
-             Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0),
-             Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
-                    ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
-             Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
-                    ['提示:高级', '提示:大师'],n=1),
-             Button(['self.save()'],['保存'], shade_time_max=0),
-             Button(['self.load()'],['载入'], shade_time_max=0),
-             Button(['self.active_menu = engine_setting; self.read_ini()'],['更改规则'], shade_time_max=0),
-             Button(['self.show_ai_bar=False', 'self.show_ai_bar=True'],
-                    ['评分条关闭', '评分条打开'])
-             ]
+    Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
+    Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0),
+    Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
+           ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
+    Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
+           ['提示:高级', '提示:大师'],n=1),
+    Button(['self.save()'],['保存'], shade_time_max=0),
+    Button(['self.load()'],['载入'], shade_time_max=0),
+    Button(['self.active_menu = engine_setting; self.read_ini()'],['更改规则'], shade_time_max=0),
+    Button(['self.show_ai_bar=False', 'self.show_ai_bar=True'],
+           ['评分条关闭', '评分条打开']),
+    Button(['webbrowser.open("https://gitee.com/windbell0711/BingGo2/blob/main/README.md")'], 
+           ['帮助']),
+    Button(['webbrowser.open("https://gitee.com/windbell0711/BingGo2/blob/main/readme/support.md")'], 
+           ['赞赏']),
+]
 sort_menu_elements_rect(main_menu)
 
 engine_setting = [
-             Button(['self.apply_engine_change()'],['重新开始'], rect=(0.25,0.9,0.2,0.05)),
-             Button(['self.active_menu = main_menu;self.read_ini();self.config_setting_operations()'],['取消更改'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
-             Button(['self.set_chn_promotion(False);self.promotion_allowed = False',
-                     'self.set_chn_promotion(True);self.promotion_allowed = True'],
-                    ['不允许中国象棋升变', '允许中国象棋升变']),
-             Button(['self.set_king_mobility(False)','self.set_king_mobility(True)'],
-                    ['不允许国王进入九宫', '允许国王进入九宫']),
-             Button(['self.set_queen_can_move_infinite(False)','self.set_queen_can_move_infinite(True)'],
-                    ['皇后移动长度不能大于三', '允许皇后长距离移动'])
-                ]
+    Button(['self.apply_engine_change()'],['重新开始'], rect=(0.25,0.9,0.2,0.05)),
+    Button(['self.active_menu = main_menu;self.read_ini();self.config_setting_operations()'],['取消更改'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
+    Button(['self.set_chn_promotion(False);self.promotion_allowed = False',
+            'self.set_chn_promotion(True);self.promotion_allowed = True'],
+           ['不允许中国象棋升变', '允许中国象棋升变']),
+    Button(['self.set_king_mobility(False)','self.set_king_mobility(True)'],
+           ['不允许国王进入九宫', '允许国王进入九宫']),
+    Button(['self.set_queen_can_move_infinite(False)','self.set_queen_can_move_infinite(True)'],
+           ['皇后移动长度不能大于三', '允许皇后长距离移动'])
+]
 sort_menu_elements_rect(engine_setting,1)
 
 # noinspection SpellCheckingInspection

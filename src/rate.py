@@ -1,11 +1,12 @@
 import time
 import logging
 from threading import Thread
-import engine
-import constant as consts
 
+from src import engine
+from src import constant as consts
 
 logger = logging.getLogger(__name__)
+
 
 class RatingSystem:
     def __init__(self):

@@ -33,7 +33,7 @@ if os.path.exists("debug_admin.txt"):
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info("Debug mode enabled.")
     try:
-        import constant
+        from src import constant
         constant.DEBUG = True
     except:
         logging.critical("Failed to import constant.")
@@ -41,7 +41,7 @@ if os.path.exists("debug_admin.txt"):
 
 # 运行游戏
 try:
-    import display
+    from src import display
     display.play()
 except (Exception, KeyboardInterrupt) as e:
     import traceback
