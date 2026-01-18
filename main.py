@@ -1,4 +1,5 @@
 import sys
+import time
 
 # 配置全局日志
 import logging
@@ -42,9 +43,18 @@ if os.path.exists("debug_admin.txt"):
 try:
     import display
     display.play()
-except Exception as e:
+except (Exception, KeyboardInterrupt) as e:
     import traceback
     logging.critical(traceback.format_exc())
+    try:
+        logging.info("运行出错，正在尝试保存...")
+        with open(f"./saves/error_save_{int(time.time())}.binggo", "a", encoding="ascii") as f:
+            g = display.game
+            f.write(g.load_rule_str_from_ini() + '|' + g.board.initial_fen + '|' + ' '.join(g.moves))
+        logging.info("保存成功。")
+    except Exception as ee:
+        logging.info("保存失败。")
     display.pygame.quit()
     display.game.quit()
+    time.sleep(0.5)
     sys.exit(1)

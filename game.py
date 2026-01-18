@@ -1,7 +1,7 @@
 import logging
 import os
 from threading import Thread
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 import beach
 import rate
@@ -155,7 +155,7 @@ class Game:
         except Exception as e:
             logger.warning(f"加载用户设置失败: {e}")
         # 引擎ini相关
-        self.ini_content = None
+        self.ini_content = ""
         self.promotion_allowed = None
         self.read_ini()
         self.config_setting_operations()
@@ -215,6 +215,9 @@ class Game:
 
     def renew_score(self):
         new_score = self.rater.score
+        if not new_score[1]:
+            logger.warning('无评分数据')
+            return
         if self.last_score != new_score:
             self.last_score = new_score
             if new_score[0] == 'score':
@@ -542,6 +545,7 @@ class Game:
                 self.board.moves_reset([])
             except Exception as e:
                 logger.error(f'存档文件损坏: {e}')
+                messagebox.showerror('存档文件损坏', '存档文件损坏，请检查存档文件。')
                 self.board.reset(force=True)
                 self.moves = []
                 self.state = 'setting'
@@ -555,6 +559,8 @@ class Game:
 
     def save(self):
         content = self.load_rule_str_from_ini() + '|' + self.board.initial_fen + '|' + ' '.join(self.moves)
+        if not os.path.exists('saves'):
+            os.mkdir('saves')
         file_path = filedialog.asksaveasfilename(
             defaultextension=".binggo",
             initialdir='saves\\',
@@ -563,6 +569,8 @@ class Game:
         if file_path:
             with open(file_path, 'w', encoding='ascii') as file:
                 file.write(content)
+        else:
+            logger.warning("保存失败：" + ' '.join(self.moves))
 
     def reset(self, fen = None):
         if fen is None:

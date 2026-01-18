@@ -13,22 +13,23 @@ class RatingSystem:
             self.eng = engine.BinggoEngine(debug_file="eng_rate.log")
         else:
             self.eng = engine.BinggoEngine()
-        self.score = 0
+        self.score = (None, None, None, None)
         self.rating_thread = None
         self.fen = None
-        self.rating_time = 100
+        self.rating_depth = 5
         self.do_rate = True
 
     def _tr(self):
         while self.do_rate:
-            try:
-                self.score = self.eng.analyze(self.fen, movetime=self.rating_time)
-            except RuntimeError as e:
-                logger.warning(f"Runtime error during analysis: {e}")
-            except Exception as e:
-                self.quit()
-            if self.rating_time < 10000:
-                self.rating_time *= 2
+            if self.rating_depth < 16:
+                try:
+                    assert self.fen
+                    self.score = self.eng.analyze(self.fen, depth=self.rating_depth)
+                except RuntimeError as e:
+                    logger.warning(f"Runtime error during analysis: {e}")
+                except Exception as e:
+                    self.quit()
+                self.rating_depth += 2
             else:
                 time.sleep(0.2)
 
@@ -39,7 +40,7 @@ class RatingSystem:
         self.rating_thread = Thread(target=self._tr)
         self.rating_thread.start()
 
-    def refresh_fen(self, fen):
+    def refresh_fen(self, fen: str):
         self.fen = fen
         self.rating_time = 100
         self.stop_current_rate()
@@ -47,7 +48,7 @@ class RatingSystem:
     def reboot(self):
         self.do_rate = False
         self.stop_current_rate()
-        self.rating_thread.join()
+        self.rating_thread.join()  # type: ignore
         self.eng.close()
         if consts.DEBUG:
             self.eng = engine.BinggoEngine(debug_file="eng_rate.log")

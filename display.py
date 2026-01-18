@@ -99,7 +99,7 @@ def play():
         UIs = set()
         pressed = (-1,0)
 
-    pygame.display.set_caption("Chess vs XiangQi")
+    pygame.display.set_caption(cns.VERSION)
     clock = pygame.time.Clock()
     running = True
 
@@ -209,6 +209,9 @@ def play():
                     number = 98
                 elif event.key == pygame.K_DOWN:
                     number = 99
+                # Ctrl + Shift + Insert
+                elif event.key == pygame.K_INSERT and (pygame.key.get_mods() & pygame.KMOD_SHIFT) and (pygame.key.get_mods() & pygame.KMOD_CTRL):
+                    raise KeyboardInterrupt("'Ctrl + Shift + Insert' Pressed")
 
         pressed = pygame.mouse.get_pressed()[0]
         last_flip = flipped

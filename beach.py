@@ -42,7 +42,7 @@ class Beach:
     def __getitem__(self, item):
         return self.beach[item]
 
-    def __setitem__(key, value):
+    def __setitem__(self, key, value):
         self.beach[key] = value
         self.beach2fen()
 

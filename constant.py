@@ -1,3 +1,5 @@
+VERSION = "BingGo v2.0.0"
+
 DEBUG = False
 
 FLIP_TICKS = 60
