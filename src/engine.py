@@ -230,6 +230,8 @@ class BinggoEngine:
         :return:     执行走法后的新FEN
         """
         # 处理输入
+        if not move:
+            return fen
         if not is_fen(fen):
             warning_msg = f"Warning: Invalid FEN: {fen}"
             logger.warning(warning_msg)

@@ -91,9 +91,9 @@ main_menu =  [
     Button(['self.show_ai_bar=False', 'self.show_ai_bar=True'],
            ['评分条关闭', '评分条打开']),
     Button(['webbrowser.open("https://gitee.com/windbell0711/BingGo2/blob/main/README.md")'], 
-           ['帮助']),
+           ['帮助'], rect=(0.85,0.8,0.1,0.05), shade_time_max=0),
     Button(['webbrowser.open("https://gitee.com/windbell0711/BingGo2/blob/main/readme/support.md")'], 
-           ['赞赏']),
+           ['赞赏'], rect=(0.85,0.9,0.1,0.05), shade_time_max=0),
 ]
 sort_menu_elements_rect(main_menu)
 
@@ -220,7 +220,7 @@ class Game:
 
     def renew_score(self):
         new_score = self.rater.score
-        if not new_score[1]:
+        if new_score[1] is None:
             logger.warning('无评分数据')
             return
         if self.last_score != new_score:
@@ -668,7 +668,7 @@ class Game:
 
     def get_ini_by_rule_str(self, rule_str):
         _i = self.config_ini_content
-        logger.info(rule_str)
+        logger.debug(f"{rule_str = }")
         if rule_str[0] == '1':
             _i = _i.replace(not_allowed_pro, allowed_pro)
         if rule_str[1] == '1':

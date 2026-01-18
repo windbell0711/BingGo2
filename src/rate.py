@@ -17,7 +17,7 @@ class RatingSystem:
         self.score = (None, None, None, None)
         self.rating_thread = None
         self.fen = None
-        self.rating_depth = 5
+        self.rating_depth = 7
         self.do_rate = True
 
     def _tr(self):
@@ -43,7 +43,7 @@ class RatingSystem:
 
     def refresh_fen(self, fen: str):
         self.fen = fen
-        self.rating_time = 100
+        self.rating_depth = 5
         self.stop_current_rate()
 
     def reboot(self):
