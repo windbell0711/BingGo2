@@ -81,10 +81,10 @@ def sort_menu_elements_rect(menu, element_per_line_max = 2):
 main_menu =  [
     Button(['self.state = \'play\''],['返回游戏'], rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
     Button(['self.reset();self.state = \'play\''],['新局'], rect=(0.25,0.9,0.2,0.05), shade_time_max=0),
-    Button(['self.ai_think_time = 1', 'self.ai_think_time = 40', 'self.ai_think_time = 500', 'self.ai_think_time = 1000'],
-           ['人机:新手', '人机:入门', '人机:高级', '人机:大师']),#!
-    Button(['self.hint_think_time = 500', 'self.hint_think_time = 1000'],
-           ['提示:高级', '提示:大师'],n=1),
+    Button([f'self.ai_think_time = {t}' for t in (1, 40, 500, 1000, 3000)],
+           [f'人机:{s}' for s in ('新手', '入门', '高级', '大师', '专家')]),#!
+    Button([f'self.hint_think_time = {t}' for t in (500, 1000)],
+           ['提示:高级', '提示:大师'], n=1),
     Button(['self.save()'],['保存'], shade_time_max=0),
     Button(['self.load()'],['载入'], shade_time_max=0),
     Button(['self.active_menu = engine_setting; self.read_ini()'],['更改规则'], shade_time_max=0),

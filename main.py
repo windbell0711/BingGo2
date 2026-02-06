@@ -42,6 +42,7 @@ if os.path.exists("debug_admin.txt"):
 # 运行游戏
 try:
     from src import display
+    logging.info("Game begins.")
     display.play()
 except (Exception, KeyboardInterrupt) as e:
     import traceback

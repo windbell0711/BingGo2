@@ -94,7 +94,7 @@ class BinggoEngine:
         初始化引擎
         engine_path: 引擎可执行文件路径
         """
-        logger.info(f"Starting engine: {engine_path}")
+        logger.debug(f"Starting engine: {engine_path}")
 
         try:
             self.proc = subprocess.Popen(
@@ -371,7 +371,7 @@ class BinggoEngine:
         time.sleep(0.2)
         self.proc.terminate()
         self.proc.wait()
-        logger.info("Engine closed.")
+        logger.debug("Engine closed.")
 
 
 if __name__ == "__main__":
