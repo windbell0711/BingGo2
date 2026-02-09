@@ -33,8 +33,8 @@ if os.path.exists("debug_admin.txt"):
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info("Debug mode enabled.")
     try:
-        from src import constant
-        constant.DEBUG = True
+        from src import consts
+        consts.DEBUG = True
     except:
         logging.critical("Failed to import constant.")
         sys.exit(1)
@@ -44,15 +44,27 @@ try:
     from src import display
     logging.info("Game begins.")
     display.play()
+except ModuleNotFoundError as e:
+    import traceback
+    logging.critical(traceback.format_exc())
 except (Exception, KeyboardInterrupt) as e:
     import traceback
     logging.critical(traceback.format_exc())
     try:
         logging.info("运行出错，正在尝试保存...")
-        with open(f"./saves/error_save_{int(time.time())}.binggo", "a", encoding="ascii") as f:
-            g = display.game
-            f.write(g.load_rule_str_from_ini() + '|' + g.board.initial_fen + '|' + ' '.join(g.moves))
-        logging.info("保存成功。")
+        import json
+        g = display.game
+        content = json.dumps({
+            'start_fen': g.board.initial_fen,
+            'moves': ' '.join(g.moves),
+            'switches': g.eng_stg.switches,
+        })
+        if content:
+            with open(f"./saves/error_save_{int(time.time())}.binggo", "a", encoding="ascii") as f:
+                f.write(content)
+                logging.info("保存成功。")
+        else:
+            logging.info("没有需要保存的内容。")
     except Exception as ee:
         logging.info("保存失败。")
     display.pygame.quit()

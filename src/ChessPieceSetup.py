@@ -120,7 +120,7 @@ class ChessPieceSetup:
         """加载默认配置"""
         self.fen_text.delete("1.0", "end")
         self.fen_text.insert("1.0", self.initial_fen)
-                
+
     def output_data(self):
         """输出配置数据"""
         # 收集数据

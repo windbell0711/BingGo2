@@ -4,7 +4,7 @@ import sys, os
 from tkinter import messagebox
 
 from src import game as gm
-from src import constant as cns
+from src import consts as cns
 
 game = gm.Game()
 
@@ -227,19 +227,24 @@ def play():
             screen.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
                                            min(height - background_image.get_height(), 0)))
             for elem in menu:
-                if type(elem) is gm.Button:
-                    normal_size_rect = raise_size_of_rect(elem.rect,square_size)
-                    if elem.shade_time_max != 0:
-                        rat = elem.shade_time/elem.shade_time_max * 150
-                        pygame.draw.rect(settings, (253 - rat, 251 - rat, 184 - rat, 160), normal_size_rect)
-                    else:
-                        pygame.draw.rect(settings, (253, 251, 184, 160), normal_size_rect)
-                    pygame.draw.rect(settings,(30,30,30),normal_size_rect, line_w)
-                    text_surface = font.render(elem.return_text(), True, (0,0,0))
-                    _t = pygame.transform.scale(text_surface, (normal_size_rect[3]/text_surface.get_height()*text_surface.get_width(),
-                                                               normal_size_rect[3]))
-                    settings.blit(_t,(normal_size_rect[0]+normal_size_rect[2]/2-_t.get_width()/2,
-                                      normal_size_rect[1]))
+                if not isinstance(elem, gm.BaseButton):
+                    logger.warning(f'elem {elem} is not a BaseButton.')
+                    continue
+                if elem.rect is None:
+                    raise ValueError(f'elem {elem} has no rect.')
+                # if type(elem) is gm.Setting:
+                normal_size_rect = raise_size_of_rect(elem.rect,square_size)
+                if elem.shade_time_max != 0:
+                    rat = elem.shade_time/elem.shade_time_max * 150
+                    pygame.draw.rect(settings, (253 - rat, 251 - rat, 184 - rat, 160), normal_size_rect)
+                else:
+                    pygame.draw.rect(settings, (253, 251, 184, 160), normal_size_rect)
+                pygame.draw.rect(settings,(30,30,30),normal_size_rect, line_w)
+                text_surface = font.render(elem.current_text, True, (0,0,0))
+                _t = pygame.transform.scale(text_surface, (normal_size_rect[3]/text_surface.get_height()*text_surface.get_width(),
+                                                            normal_size_rect[3]))
+                settings.blit(_t,(normal_size_rect[0]+normal_size_rect[2]/2-_t.get_width()/2,
+                                    normal_size_rect[1]))
 
             bg = pygame.Surface((width, height), pygame.SRCALPHA)
             bg.fill((0, 0, 0, 100 * shade_count/10))

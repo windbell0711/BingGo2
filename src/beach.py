@@ -1,7 +1,7 @@
 import time
 import logging
 
-from src import constant as cns
+from src import consts as cns
 from src import engine as fsf
 
 logger = logging.getLogger(__name__)

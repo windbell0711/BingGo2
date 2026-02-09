@@ -375,9 +375,8 @@ class BinggoEngine:
 
 
 if __name__ == "__main__":
-    eng = BinggoEngine(debug_file="debug.log")
-    root_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1"
-    # fen = eng.perform_move(root_fen, "a4b4 f9c6 h3a3 c9b7 g1e3 d9c9 b3c3 c6e4 h1f2 e4d5 c4c5 d5d2 c1d2 b7d6 a3a9".split())
-    # print(fen)
-    logger.info(eng.analyze(root_fen, depth=8))
-    # eng._d()
+    eng = BinggoEngine(debug_file="engine\\debug.log")
+    root_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OO1/1A5A1/9/CMXSWSXMC w kq - 0 1"
+    fen = eng.perform_move(root_fen, "a1a2 f9a4 a2a1".split())
+    print(fen)
+    eng._d()
