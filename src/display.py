@@ -222,7 +222,7 @@ def play():
 
         if menu is not None:
             if shade_count < 10:
-                shade_count = min(var.ANIM_SPEED+shade_count, 10)
+                shade_count = min(var.anim_speed+shade_count, 10)
 
             settings.fill((0,0,0,0))
             screen.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
@@ -255,7 +255,7 @@ def play():
         else:
 
             if shade_count > 0:
-                shade_count = max(shade_count-var.ANIM_SPEED, 0)
+                shade_count = max(shade_count-var.anim_speed, 0)
 
             pieces.fill((0,0,0,0))
             if flipped ^ last_flip:
@@ -395,7 +395,7 @@ def play():
 
         pygame.display.flip()
 
-        clock.tick(var.FLIP_TICKS)
+        clock.tick(var.flip_ticks)
 
     if not os.path.exists('userdata'):
         os.mkdir('userdata')

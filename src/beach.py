@@ -2,6 +2,7 @@ import time
 import logging
 import json
 
+from src import variable as var
 from src import consts
 from src import engine as fsf
 
@@ -15,10 +16,9 @@ n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
 
 try:
     with open('userdata\\engine_setting.json', 'r', encoding='ascii') as f:
-        initial_fen: str = json.load(f)['redeclares']['startFen']
+        var.init_fen = json.load(f)['redeclares']['startFen']
 except:
-    initial_fen = "rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1"
-
+    logger.debug('no engine setting file found')
 
 def fsf2beach(p):
     return a2n[p[0]] + (9 - int(p[1])) * 9
@@ -28,7 +28,7 @@ def beach2fsf(p):
 
 class Beach:
     """ 用途：记录当前局面便于显示调用 + 调用引擎。 fen = pieces + extra """
-    def __init__(self, fen=initial_fen):
+    def __init__(self, fen=var.init_fen):
         self.beach = []
         for char in fen.replace('/',''):
             if char == ' ':
@@ -82,7 +82,7 @@ class Beach:
 
     def reset(self, fen = None, force = False):
         if force:
-            self.fen = self.initial_fen = initial_fen
+            self.fen = self.initial_fen = var.init_fen
             self.fen2beach(self.fen)
             return
         if fen is None:

@@ -4,6 +4,13 @@ import webbrowser
 
 from src.engine import fen_is_invalid, is_betza
 
+def format_redeclares(redeclares: dict[str, str]) -> str:
+    """将重声明字典格式化为字符串"""
+    if not redeclares:
+        return "; Nothing changed"
+    return "\n".join(f"{k}={v}" for k, v in redeclares.items())
+
+
 class ChessPieceSetup:
     blank_default = {
         'startFen': 'rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1',
@@ -22,13 +29,6 @@ class ChessPieceSetup:
         'customPiece13': 'n:N', 
         'customPiece14': 'p:mfWcfFimfR2',
     }
-    @staticmethod
-    def format_redeclares(redeclares: dict[str, str]) -> str:
-        """将重声明字典格式化为字符串"""
-        if not redeclares:
-            return "; Nothing changed"
-        return "\n".join(f"{k}={v}" for k, v in redeclares.items())
-    
     def __init__(self, root, redeclares: dict[str, str]):
         self.root = root
         self.root.title("棋子走法设置器")
@@ -243,6 +243,6 @@ if __name__ == "__main__":
         result = {k: v.get() for k, (v, _, _) in app.entries.items() if app.check_vars[k].get()}
         print(f"更改的配置: {result}")
         print("格式化预览:")
-        print(ChessPieceSetup.format_redeclares(result))
+        print(format_redeclares(result))
     else:
         print("用户取消操作")

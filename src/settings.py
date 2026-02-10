@@ -37,7 +37,7 @@ class BaseButton:
         return ""
 
     def tick_update(self, *args):
-        self.shade_time = max(0, self.shade_time-var.ANIM_SPEED)
+        self.shade_time = max(0, self.shade_time-var.anim_speed)
 
 
 class PressBtn(BaseButton):
@@ -243,7 +243,7 @@ $king_enter_palace
         sub_dict: dict[str, str] = {}
         for key, value in self.switches.items():
             sub_dict[key] = EngineStg.repl_dict[key][value]
-        return self.template.substitute(**sub_dict, BLANK=cps.ChessPieceSetup.format_redeclares(self.redeclares))
+        return self.template.substitute(**sub_dict, BLANK=cps.format_redeclares(self.redeclares))
     
     def write_to_ini(self) -> None:
         with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:

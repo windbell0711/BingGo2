@@ -7,10 +7,10 @@ from tkinter import filedialog, messagebox
 
 from src import beach
 from src import rate
+from src import consts
 from src import variable as var
 from src.settings import BaseButton, PressBtn, SettingBtn, Menu
 from src.settings import EngineStg
-
 
 logger = logging.getLogger(__name__)
         
@@ -252,14 +252,14 @@ class Game:
             self.state = 'setting'
 
     def do_checkmate_animation(self, delay = 10):
-        delay //= var.ANIM_SPEED
+        delay //= var.anim_speed
         if ' w ' in self.board.fen:
             p = self.board.beach.index(6, 56)
-            self.piece_animations.append((p, p, 0, 20//var.ANIM_SPEED+delay, 6))
+            self.piece_animations.append((p, p, 0, 20//var.anim_speed+delay, 6))
         else:
             p = self.board.beach.index(12)
-            self.piece_animations.append((p, p, 0, 20//var.ANIM_SPEED+delay, 12))
-        self.piece_animations.append((-2, p, -delay, 20//var.ANIM_SPEED, 15))
+            self.piece_animations.append((p, p, 0, 20//var.anim_speed+delay, 12))
+        self.piece_animations.append((-2, p, -delay, 20//var.anim_speed, 15))
 
     # 删除结束的动画，进度 +1
     def process_animation(self):
@@ -302,7 +302,7 @@ class Game:
                 self.UIs.add((81, 'r' if self.ai_int else 'h'))
                 self.UIs.add((89, 'r' if self.ai_chn else 'h'))
         if self.pressed_button[-1] > 0 and not pressed:
-            self.pressed_button[-1] = max(0, self.pressed_button[-1] - var.ANIM_SPEED)
+            self.pressed_button[-1] = max(0, self.pressed_button[-1] - var.anim_speed)
 
     def _am(self, d=False, tt = 1000):
         if d:
@@ -390,11 +390,11 @@ class Game:
             p, typ = beach_p, self.board[beach_p]
             if typ >= 0:
                 if self.board_is_flipped:
-                    self.piece_animations.append((p - 0.15, p, 0, 3//var.ANIM_SPEED, typ))
-                    self.piece_animations.append((p, p - 0.15, -3, 3//var.ANIM_SPEED, typ))
+                    self.piece_animations.append((p - 0.15, p, 0, 3//var.anim_speed, typ))
+                    self.piece_animations.append((p, p - 0.15, -3, 3//var.anim_speed, typ))
                 else:
-                    self.piece_animations.append((p + 0.15, p, 0, 3//var.ANIM_SPEED, typ))
-                    self.piece_animations.append((p, p + 0.15, -3, 3//var.ANIM_SPEED, typ))
+                    self.piece_animations.append((p + 0.15, p, 0, 3//var.anim_speed, typ))
+                    self.piece_animations.append((p, p + 0.15, -3, 3//var.anim_speed, typ))
             return
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
@@ -408,16 +408,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//var.ANIM_SPEED,eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//var.anim_speed,eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((2, 2, 0, 10//var.ANIM_SPEED, 8))
-                self.piece_animations.append((2, 0, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((2, 2, 0, 10//var.anim_speed, 8))
+                self.piece_animations.append((2, 0, -10//var.anim_speed, 10//var.anim_speed, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((4, 4, 0, 10//var.ANIM_SPEED, 8))
-                self.piece_animations.append((4, 8, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((4, 4, 0, 10//var.anim_speed, 8))
+                self.piece_animations.append((4, 8, -10//var.anim_speed, 10//var.anim_speed, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((tp, fp, 0, 10//var.ANIM_SPEED, piece_typ))
+                self.piece_animations.append((tp, fp, 0, 10//var.anim_speed, piece_typ))
             self.rater.refresh_fen(self.board.fen)
 
     def gret(self):
@@ -428,16 +428,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//var.ANIM_SPEED, eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//var.anim_speed, eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((0, 0, 0, 10//var.ANIM_SPEED, 8))
-                self.piece_animations.append((0, 2, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((0, 0, 0, 10//var.anim_speed, 8))
+                self.piece_animations.append((0, 2, -10//var.anim_speed, 10//var.anim_speed, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((8, 8, 0, 10//var.ANIM_SPEED, 8))
-                self.piece_animations.append((8, 4, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((8, 8, 0, 10//var.anim_speed, 8))
+                self.piece_animations.append((8, 4, -10//var.anim_speed, 10//var.anim_speed, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((fp, tp, 0, 10//var.ANIM_SPEED, piece_typ))
+                self.piece_animations.append((fp, tp, 0, 10//var.anim_speed, piece_typ))
             self.move_step += 1
             self.board.moves_reset(self.moves[:self.move_step])
             if self.board.get_pms()[1]:
@@ -504,6 +504,7 @@ class Game:
 
     def save(self):
         content = json.dumps({
+            'version': consts.VERSION,
             'start_fen': self.board.initial_fen,
             'moves': ' '.join(self.moves),
             'switches': self.eng_stg.switches,
@@ -544,10 +545,10 @@ class Game:
     def open_chess_piece_setup(self):
         """打开棋子走法设置器"""
         import tkinter as tk
-        from src import ChessPieceSetup
+        from src import ChessPieceSetup as cps
         
         root = tk.Tk()
-        app = ChessPieceSetup.ChessPieceSetup(root, self.eng_stg.redeclares)
+        app = cps.ChessPieceSetup(root, self.eng_stg.redeclares)
         root.mainloop()
         
         # 处理结果
@@ -557,22 +558,10 @@ class Game:
             self.eng_stg.redeclares = result_data
             # 保存设置并应用
             self.eng_stg.save_to_json()
-            
-            # qwen's debug
-            # 如果有新的起始FEN，先保存它
-            new_start_fen = None
-            if 'startFen' in result_data:
-                new_start_fen = result_data['startFen']
-                logger.info(f"准备更新棋盘FEN为: {new_start_fen}")
-            
-            # 应用引擎更改（这会触发reset）
+                        
+            # 应用引擎更改
+            var.init_fen = result_data.get('startFen') or var.INIT_FEN_DEFAULT
             self.apply_engine_change()
-            
-            # 在引擎更改完成后（reset执行后），如果之前有新的FEN，则更新棋盘
-            if new_start_fen:
-                # 注意：这里不能立即执行，因为apply_engine_change是异步的
-                # 我们需要在_apply_engine_change方法中处理这个逻辑
-                pass
             
             messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
         elif app.confirm is False:
@@ -660,41 +649,3 @@ class Game:
 
         if flip == '1':
             self.board_is_flipped = True
-
-if __name__ == "__main__":
-    # 集成测试：验证chessPieceSetup的FEN同步功能
-    print("=== ChessPieceSetup FEN同步测试 ===")
-    
-    # 创建游戏实例
-    game = Game()
-    original_fen = game.board.fen
-    print(f"原始FEN: {original_fen}")
-    
-    # 模拟chessPieceSetup的逻辑
-    test_redeclares = {
-        'startFen': 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1',
-        'customPiece10': 'q:WDHFNCAZG'
-    }
-    
-    # 模拟用户确认更改
-    game.eng_stg.redeclares = test_redeclares
-    game.eng_stg.save_to_json()
-    
-    # 模拟_apply_engine_change的逻辑
-    new_start_fen = game.eng_stg.redeclares.get('startFen')
-    if new_start_fen:
-        game.board.reset(fen=new_start_fen)
-        game.rater.refresh_fen(new_start_fen)
-        print(f"更新后的FEN: {game.board.fen}")
-        
-        # 验证FEN是否正确更新
-        if game.board.fen == new_start_fen:
-            print("✓ FEN同步测试通过")
-        else:
-            print("✗ FEN同步测试失败")
-    
-    # 测试reset方法是否会覆盖FEN
-    game.reset()
-    print(f"Reset后FEN: {game.board.fen}")
-    
-    print("=== 测试完成 ===")

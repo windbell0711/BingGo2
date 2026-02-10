@@ -41,8 +41,8 @@ if os.path.exists("debug_admin.txt"):
 
 # 运行游戏
 try:
-    from src import display
-    logging.info("Game begins.")
+    from src import display, consts
+    logging.info("Game begins: " + consts.VERSION)
     display.play()
 except ModuleNotFoundError as e:
     import traceback
