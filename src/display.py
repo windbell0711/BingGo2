@@ -4,7 +4,8 @@ import sys, os
 from tkinter import messagebox
 
 from src import game as gm
-from src import consts as cns
+from src import variable as var
+from src import consts
 
 game = gm.Game()
 
@@ -100,7 +101,7 @@ def play():
         UIs = set()
         pressed = (-1,0)
 
-    pygame.display.set_caption(cns.VERSION)
+    pygame.display.set_caption(consts.VERSION)
     clock = pygame.time.Clock()
     running = True
 
@@ -221,7 +222,7 @@ def play():
 
         if menu is not None:
             if shade_count < 10:
-                shade_count = min(cns.ANIM_SPEED+shade_count, 10)
+                shade_count = min(var.ANIM_SPEED+shade_count, 10)
 
             settings.fill((0,0,0,0))
             screen.blit(background_image, (min((width - background_image.get_width()) / 2, 0),
@@ -254,7 +255,7 @@ def play():
         else:
 
             if shade_count > 0:
-                shade_count = max(shade_count-cns.ANIM_SPEED, 0)
+                shade_count = max(shade_count-var.ANIM_SPEED, 0)
 
             pieces.fill((0,0,0,0))
             if flipped ^ last_flip:
@@ -394,7 +395,7 @@ def play():
 
         pygame.display.flip()
 
-        clock.tick(cns.FLIP_TICKS)
+        clock.tick(var.FLIP_TICKS)
 
     if not os.path.exists('userdata'):
         os.mkdir('userdata')

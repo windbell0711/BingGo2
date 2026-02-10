@@ -3,6 +3,7 @@ import logging
 from threading import Thread
 
 from src import engine
+from src import variable as var
 from src import consts
 
 logger = logging.getLogger(__name__)

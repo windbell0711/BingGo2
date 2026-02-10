@@ -1,7 +1,8 @@
 import time
 import logging
 
-from src import consts as cns
+from src import variable as var
+from src import consts
 from src import engine as fsf
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q'
 a2n = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7,'i':8}
 n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
 
-initial_fen = cns.INITIAL_FEN
+initial_fen = var.INITIAL_FEN
 # initial_fen = '3k5/C8/8C/9/9/9/9/1p7/5W3 w kq - 0 1'
 
 
@@ -35,7 +36,7 @@ class Beach:
                 self.beach.append(c2p[char])
         self.fen = fen
         self.initial_fen = fen
-        if cns.DEBUG:
+        if consts.DEBUG:
             self.eng = fsf.BinggoEngine(debug_file="eng_beach.log")
         else:
             self.eng = fsf.BinggoEngine()
@@ -117,7 +118,7 @@ class Beach:
 
     def reboot_engine(self):
         self.suicide()
-        if cns.DEBUG:
+        if consts.DEBUG:
             self.eng = fsf.BinggoEngine(debug_file="eng_beach.log")
         else:
             self.eng = fsf.BinggoEngine()

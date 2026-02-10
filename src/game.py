@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox
 
 from src import beach
 from src import rate
-from src import consts as cns
+from src import variable as var
 from src.settings import BaseButton, PressBtn, SettingBtn, Menu
 from src.settings import EngineStg
 
@@ -251,14 +251,14 @@ class Game:
             self.state = 'setting'
 
     def do_checkmate_animation(self, delay = 10):
-        delay //= cns.ANIM_SPEED
+        delay //= var.ANIM_SPEED
         if ' w ' in self.board.fen:
             p = self.board.beach.index(6, 56)
-            self.piece_animations.append((p, p, 0, 20//cns.ANIM_SPEED+delay, 6))
+            self.piece_animations.append((p, p, 0, 20//var.ANIM_SPEED+delay, 6))
         else:
             p = self.board.beach.index(12)
-            self.piece_animations.append((p, p, 0, 20//cns.ANIM_SPEED+delay, 12))
-        self.piece_animations.append((-2, p, -delay, 20//cns.ANIM_SPEED, 15))
+            self.piece_animations.append((p, p, 0, 20//var.ANIM_SPEED+delay, 12))
+        self.piece_animations.append((-2, p, -delay, 20//var.ANIM_SPEED, 15))
 
     # 删除结束的动画，进度 +1
     def process_animation(self):
@@ -301,7 +301,7 @@ class Game:
                 self.UIs.add((81, 'r' if self.ai_int else 'h'))
                 self.UIs.add((89, 'r' if self.ai_chn else 'h'))
         if self.pressed_button[-1] > 0 and not pressed:
-            self.pressed_button[-1] = max(0, self.pressed_button[-1] - cns.ANIM_SPEED)
+            self.pressed_button[-1] = max(0, self.pressed_button[-1] - var.ANIM_SPEED)
 
     def _am(self, d=False, tt = 1000):
         if d:
@@ -389,11 +389,11 @@ class Game:
             p, typ = beach_p, self.board[beach_p]
             if typ >= 0:
                 if self.board_is_flipped:
-                    self.piece_animations.append((p - 0.15, p, 0, 3//cns.ANIM_SPEED, typ))
-                    self.piece_animations.append((p, p - 0.15, -3, 3//cns.ANIM_SPEED, typ))
+                    self.piece_animations.append((p - 0.15, p, 0, 3//var.ANIM_SPEED, typ))
+                    self.piece_animations.append((p, p - 0.15, -3, 3//var.ANIM_SPEED, typ))
                 else:
-                    self.piece_animations.append((p + 0.15, p, 0, 3//cns.ANIM_SPEED, typ))
-                    self.piece_animations.append((p, p + 0.15, -3, 3//cns.ANIM_SPEED, typ))
+                    self.piece_animations.append((p + 0.15, p, 0, 3//var.ANIM_SPEED, typ))
+                    self.piece_animations.append((p, p + 0.15, -3, 3//var.ANIM_SPEED, typ))
             return
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
@@ -407,16 +407,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//cns.ANIM_SPEED,eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//var.ANIM_SPEED,eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((2, 2, 0, 10//cns.ANIM_SPEED, 8))
-                self.piece_animations.append((2, 0, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((2, 2, 0, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((2, 0, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((4, 4, 0, 10//cns.ANIM_SPEED, 8))
-                self.piece_animations.append((4, 8, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((4, 4, 0, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((4, 8, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((tp, fp, 0, 10//cns.ANIM_SPEED, piece_typ))
+                self.piece_animations.append((tp, fp, 0, 10//var.ANIM_SPEED, piece_typ))
             self.rater.refresh_fen(self.board.fen)
 
     def gret(self):
@@ -427,16 +427,16 @@ class Game:
             tp = beach.fsf2beach(move[2:4])
             eat_typ = self.board[tp]
             if eat_typ >= 0:
-                self.piece_animations.append((tp, tp, 0, 10//cns.ANIM_SPEED, eat_typ))
+                self.piece_animations.append((tp, tp, 0, 10//var.ANIM_SPEED, eat_typ))
             piece_typ = self.board[fp]
             if move == 'd9b9' and piece_typ == 12:
-                self.piece_animations.append((0, 0, 0, 10//cns.ANIM_SPEED, 8))
-                self.piece_animations.append((0, 2, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((0, 0, 0, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((0, 2, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
             if move == 'd9f9' and piece_typ == 12:
-                self.piece_animations.append((8, 8, 0, 10//cns.ANIM_SPEED, 8))
-                self.piece_animations.append((8, 4, -10//cns.ANIM_SPEED, 10//cns.ANIM_SPEED, 8))
+                self.piece_animations.append((8, 8, 0, 10//var.ANIM_SPEED, 8))
+                self.piece_animations.append((8, 4, -10//var.ANIM_SPEED, 10//var.ANIM_SPEED, 8))
             if piece_typ >= 0:
-                self.piece_animations.append((fp, tp, 0, 10//cns.ANIM_SPEED, piece_typ))
+                self.piece_animations.append((fp, tp, 0, 10//var.ANIM_SPEED, piece_typ))
             self.move_step += 1
             self.board.moves_reset(self.moves[:self.move_step])
             if self.board.get_pms()[1]:

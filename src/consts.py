@@ -1,7 +1,4 @@
-VERSION = "BingGo v2.0.0"
+from typing import Final
 
-DEBUG = False
-
-FLIP_TICKS = 60
-ANIM_SPEED = 1
-INITIAL_FEN = 'rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1'
+VERSION: Final = "BingGo v2.0.0"
+DEBUG: Final = False

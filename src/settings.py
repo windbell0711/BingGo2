@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Literal, Optional
 
-from src import consts
+from src import variable as var
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class BaseButton:
         return ""
 
     def tick_update(self, *args):
-        self.shade_time = max(0, self.shade_time-consts.ANIM_SPEED)
+        self.shade_time = max(0, self.shade_time-var.ANIM_SPEED)
 
 
 class PressBtn(BaseButton):
