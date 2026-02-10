@@ -122,14 +122,14 @@ class Menu:
 class EngineStg:
     repl_dict: dict[str, dict[int, str]] = {
         "queen_inf": {
-            0: "customPiece10 = q:B3R3",
-            1: "customPiece10 = q:BR",
-            2: "",
+            0: "q:B3R3",
+            1: "q:BR",
+            2: "q:WDHFNCAZG",
         },
         "white_promo": {
             0: "pawnTypes = p",
             1: "pawnTypes = po\npromotionPawnTypesWhite = o\n"
-            "promotionPieceTypesWhite = jcaxsm\npromotionRegionWhite = *9",
+               "promotionPieceTypesWhite = jcaxsm\npromotionRegionWhite = *9",
         },
         "king_enter_palace": {
             0: "mobilityRegionBlackKing  = a1 a2 a3 b1 b2 b3 c1 c2 c3 g1 g2 g3 h1 h2 h3 i1 i2 i3 *4 *5 *6 *7 *8 *9",
@@ -144,7 +144,7 @@ class EngineStg:
 maxRank = 9
 maxFile = 9
 
-; Note that the queen (customPiece10) might be declared twice
+; Note that fen and some pieces might be declared twice
 startFen = rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1
 
 customPiece1 = j:NB2RmpRcpR
@@ -157,13 +157,13 @@ customPiece7 = w:s
 customPiece8 = m:h
 
 customPiece9 = k:K
-customPiece10 = q:BR
+customPiece10 = $queen_inf
 customPiece11 = r:R
 customPiece12 = b:B
 customPiece13 = n:N
 customPiece14 = p:mfWcfFimfR2
 
-$queen_inf
+$BLANK
 
 $white_promo
 promotionPawnTypesBlack = p
@@ -203,17 +203,18 @@ $king_enter_palace
     def __init__(self) -> None:
         # yo absolutely cool!! TEMPLATE!! hiahiahia~
         self.template = Template(EngineStg.ini_template)
-        self.switches: dict[str, int] = {}
+        self.switches: dict[str, int] = EngineStg.swit_default
+        self.redeclares: dict[str, str] = {}
         self.load_from_default()
     
-    def __getitem__(self, key: str) -> int:
-        return self.switches[key]
+    # def __getitem__(self, key: str) -> int:
+    #     return self.switches[key]
     
-    def __setitem__(self, key: str, value: int) -> None:
-        self.switches[key] = value
+    # def __setitem__(self, key: str, value: int) -> None:
+    #     self.switches[key] = value
     
-    def __len__(self) -> int:
-        return len(self.switches)
+    # def __len__(self) -> int:
+    #     return len(self.switches)
     
     def __iter__(self):  raise NotImplementedError
     
@@ -222,12 +223,12 @@ $king_enter_palace
             with open('userdata\\engine_setting.json', 'r', encoding='ascii') as f:
                 self.load_from_json(f.read())
         except FileNotFoundError as e:
-            logger.warning("读取引擎设置失败，使用默认值: " + str(e))
-            self.switches = EngineStg.swit_default
+            logger.warning("读取引擎设置失败，使用默认值 " + str(e))
     
     def load_from_json(self, f: str) -> None:
         _ = json.loads(f)
-        self.switches = _['switches']
+        if 'switches' in _:    self.switches =   _['switches']
+        if 'redeclares' in _:  self.redeclares = _['redeclare_rule']
     
     def save_to_json(self) -> None:
         with open('userdata\\engine_setting.json', 'w', encoding='ascii') as f:
@@ -237,7 +238,7 @@ $king_enter_palace
         sub_dict: dict[str, str] = {}
         for key, value in self.switches.items():
             sub_dict[key] = EngineStg.repl_dict[key][value]
-        return self.template.substitute(**sub_dict)
+        # return self.template.substitute(**sub_dict, BLANK=self.redeclares)
     
     def write_to_ini(self) -> None:
         with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:

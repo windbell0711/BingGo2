@@ -21,20 +21,32 @@ def is_pgn(move: str) -> bool:
     return (move[0] in BOARD_FILES and move[2] in BOARD_FILES and
             move[1] in BOARD_RANKS and move[3] in BOARD_RANKS)
 
-def is_fen(fen: str) -> bool:
-    """检查是否符合FEN格式"""
+def is_betza(betza: str) -> bool:
+    if not betza or betza.count(':') > 1:
+        return False
+    betza = betza.replace(' ', '')
+    if ':' in betza:
+        if betza[:betza.find(':')] not in PIECE_TYPS_LOWER:
+            return False
+        if betza.find(':') + 1 == len(betza):
+            return True  # 'q:' 走不动，但是也行
+        betza = betza[betza.find(':')+1:]
+    return True  # TODO
+    
+def fen_is_invalid(fen: str) -> str:
+    """检查FEN格式是否合法，返回错误信息（若合法则返回空字符串）"""
     parts = fen.strip().split()
     if len(parts) != 6:
-        logger.warning("Invalid FEN: Invalid number of parts")
-        return False
+        return "Invalid FEN: Invalid number of parts"
+
     piece_placement, active_color, castling, en_passant, halfmove, fullmove = parts
-    
+
     ranks = piece_placement.split('/')
     if len(ranks) != len(BOARD_RANKS):
-        logger.warning("Invalid FEN: Invalid number of ranks")
-        return False
+        return "Invalid FEN: Invalid number of ranks"
+
     valid_pieces = PIECE_TYPS_LOWER + PIECE_TYPS_LOWER.upper()
-    
+
     for rank_idx, rank in enumerate(ranks):
         file_count = 0
         i = 0
@@ -47,42 +59,34 @@ def is_fen(fen: str) -> bool:
                 else:
                     num = int(ch)
                 if num < 1 or num > len(BOARD_FILES):
-                    logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 数字{num}超出范围(1-{len(BOARD_FILES)})")
-                    return False
+                    return f"第{len(BOARD_RANKS)-rank_idx}行: 数字{num}超出范围(1-{len(BOARD_FILES)})"
                 file_count += num
             elif ch in valid_pieces:  # 棋子
                 file_count += 1
             else:  # 非法字符
-                logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 非法字符 '{ch}'")
-                return False
+                return f"第{len(BOARD_RANKS)-rank_idx}行: 非法字符 '{ch}'"
             i += 1
-        
+
         if file_count != len(BOARD_FILES):
-            logger.warning(f"第{len(BOARD_RANKS)-rank_idx}行: 应有{len(BOARD_FILES)}列，实际有{file_count}列")
-            return False
-    
+            return f"第{len(BOARD_RANKS)-rank_idx}行: 应有{len(BOARD_FILES)}列，实际有{file_count}列"
+
     if active_color not in ('w', 'b'):
-        logger.warning(f"活动方应为'w'或'b'，实际是'{active_color}'")
-        return False
-    
+        return f"活动方应为'w'或'b'，实际是'{active_color}'"
+
     if castling != '-':
         for ch in castling:
             if ch not in ('K', 'Q', 'k', 'q'):
-                logger.warning(f"王车易位包含非法字符 '{ch}'")
-                return False
-    
+                return f"王车易位包含非法字符 '{ch}'"
+
     if en_passant != '-':
-        logger.info("暂不支持过路兵")
-        return False
-    
+        return "暂不支持过路兵"
+
     if not halfmove.isdigit():
-        logger.warning(f"半回合计数不是有效整数: {halfmove}")
-        return False
+        return f"半回合计数不是有效整数: {halfmove}"
     if not fullmove.isdigit():
-        logger.warning(f"完整回合计数不是有效整数: {fullmove}")
-        return False
-    
-    return True
+        return f"完整回合计数不是有效整数: {fullmove}"
+
+    return ""  # 合法FEN，返回空字符串
 
 
 class BinggoEngine:
@@ -176,7 +180,19 @@ class BinggoEngine:
                 output += line
             if until in line:
                 return output
-        raise RuntimeError(f"Too many lines to read without finding '{until}'")
+        logger.warning(f"Too many lines to read without finding '{until}', trying to stop...")
+        self.stop()
+        time.sleep(0.500)
+        for _ in range(220):
+            line = self._readline()
+            if del_blank_lines and line.strip() == "":
+                continue
+            if not any((word in line) for word in ignore):
+                output += line
+            if until in line:
+                return output
+        logging.warning("Still fail to find")
+        raise RuntimeError("Too many lines to read without finding '{until}'")
 
     def _send_command(self, cmd: str) -> None:
         """发送命令到引擎"""
@@ -232,8 +248,8 @@ class BinggoEngine:
         # 处理输入
         if not move:
             return fen
-        if not is_fen(fen):
-            warning_msg = f"Warning: Invalid FEN: {fen}"
+        if fen_is_invalid(fen):
+            warning_msg = f"Warning: Invalid FEN: {fen} {fen_is_invalid(fen)}"
             logger.warning(warning_msg)
             raise ValueError(warning_msg)
         if isinstance(move, list):
@@ -280,8 +296,8 @@ class BinggoEngine:
         @param fen: 起始局面的FEN字符串
         @return: 所有合法走法的字符串列表
         """
-        if not is_fen(fen):
-            warning_msg = f"Warning: Invalid FEN: {fen}"
+        if fen_is_invalid(fen):
+            warning_msg = f"Warning: Invalid FEN: {fen} {fen_is_invalid(fen)}"
             logger.warning(warning_msg)
             raise ValueError(warning_msg)
         self._send_command(f"position fen {fen}")
@@ -309,8 +325,8 @@ class BinggoEngine:
 
         出错则为None，请及时校验。
         """
-        if not is_fen(fen):
-            warning_msg = f"Warning: Invalid FEN: {fen}"
+        if fen_is_invalid(fen):
+            warning_msg = f"Warning: Invalid FEN: {fen} {fen_is_invalid(fen)}"
             logger.warning(warning_msg)
             raise ValueError(warning_msg)
         # 获取最佳走法
@@ -335,8 +351,8 @@ class BinggoEngine:
             return None, None
 
     def analyze(self, fen: str, movetime=0, depth=0) -> tuple[str, int, str, int] | tuple[None, None, None, None]:  # TODO
-        if not is_fen(fen):
-            warning_msg = f"Warning: Invalid FEN: {fen}"
+        if fen_is_invalid(fen):
+            warning_msg = f"Warning: Invalid FEN: {fen} {fen_is_invalid(fen)}"
             logger.warning(warning_msg)
             raise ValueError(warning_msg)
         # 解析mycamp

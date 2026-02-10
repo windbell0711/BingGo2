@@ -8,6 +8,8 @@ import time
 import logging
 from typing import Dict, Optional, Any
 
+raise NotImplementedError
+
 # 获取模块专用logger
 logger = logging.getLogger(__name__)
 

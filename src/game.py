@@ -105,7 +105,7 @@ class Game:
     
     @property
     def w_promotion_allowed(self):
-        return self.eng_stg['white_promo']
+        return self.eng_stg.switches['white_promo']
 
     def reset_special_pieces_show(self):
         self.highlight_paths = []
@@ -312,8 +312,8 @@ class Game:
         self.state = 'wait'
         try:
             move = self.board.get_best_move(think_time=tt)
-        except RuntimeError:
-            logger.warning("Runtime error during AI move calculation")
+        except RuntimeError as e:
+            logger.error("Runtime error during AI move calculation: " + str(e))
             return
         self.apply_move(move)
 
@@ -553,7 +553,7 @@ class Game:
         Thread(target=self._apply_engine_change).start()
 
     def set_eng_stg(self, target: str, option: int):  # pyright: ignore[reportUnusedFunction]
-        self.eng_stg[target] = option
+        self.eng_stg.switches[target] = option
 
     def sync_eng_stg_display(self):
         for k, v in self.eng_stg.switches.items():
@@ -583,10 +583,10 @@ class Game:
             '5000': 4,
         }
         if ai_tt in ai_tt_d:
-            main_menu['人机'].n = ai_tt_d[ai_tt]
+            main_menu['人机'].n = ai_tt_d[ai_tt] # type: ignore
             self.ai_think_time = int(ai_tt)
         else:
-            main_menu['人机'].n = 0
+            main_menu['人机'].n = 0 # type: ignore
             self.ai_think_time = 1
 
         ht_tt_d = {
@@ -594,17 +594,17 @@ class Game:
             '5000': 1,
         }
         if ht_tt in ht_tt_d:
-            main_menu['提示'].n = ht_tt_d[ht_tt]
+            main_menu['提示'].n = ht_tt_d[ht_tt] # type: ignore
             self.hint_think_time = int(ht_tt)
         else:
-            main_menu['提示'].n = 0
+            main_menu['提示'].n = 0 # type: ignore
             self.hint_think_time = 1000
 
         if show_bar == '1':
-            main_menu['评分条'].n = 1
+            main_menu['评分条'].n = 1 # type: ignore
             self.show_ai_bar = True
         else:
-            main_menu['评分条'].n = 0
+            main_menu['评分条'].n = 0 # type: ignore
             self.show_ai_bar = False
 
         if flip == '1':
