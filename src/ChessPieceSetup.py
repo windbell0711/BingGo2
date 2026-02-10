@@ -5,11 +5,28 @@ import webbrowser
 from src.engine import fen_is_invalid, is_betza
 
 class ChessPieceSetup:
+    blank_default = {
+        'startFen': 'rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1',
+        'customPiece1': 'j:NB2RmpRcpR', 
+        'customPiece2': 'x:B2', 
+        'customPiece3': 'o:fsW',
+        'customPiece4': 's:K', 
+        'customPiece5': 'a:mRpR', 
+        'customPiece6': 'c:R',
+        'customPiece7': 'w:W', 
+        'customPiece8': 'm:nN', 
+        'customPiece9': 'k:K',
+        'customPiece10': 'q:RB', 
+        'customPiece11': 'r:R', 
+        'customPiece12': 'b:B',
+        'customPiece13': 'n:N', 
+        'customPiece14': 'p:mfWcfFimfR2',
+    }
     @staticmethod
     def format_redeclares(redeclares: dict[str, str]) -> str:
         """将重声明字典格式化为字符串"""
         if not redeclares:
-            return "暂无更改项目"
+            return "; Nothing changed"
         return "\n".join(f"{k}={v}" for k, v in redeclares.items())
     
     def __init__(self, root, redeclares: dict[str, str]):
@@ -21,14 +38,6 @@ class ChessPieceSetup:
         
         # 记录初始状态用于恢复
         self.original_redeclares = redeclares or {}
-        self.blank_default = {
-            'startFen': 'rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1',
-            'customPiece1': 'j:NB2RmpRcpR', 'customPiece2': 'x:B2', 'customPiece3': 'o:fsW',
-            'customPiece4': 's:K', 'customPiece5': 'a:mRpR', 'customPiece6': 'c:R',
-            'customPiece7': 'w:s', 'customPiece8': 'm:h', 'customPiece9': 'k:K',
-            'customPiece10': 'q:RB', 'customPiece11': 'r:R', 'customPiece12': 'b:B',
-            'customPiece13': 'n:N', 'customPiece14': 'p:mfWcfFimfR2',
-        }
         
         # 根据redeclares初始化初始状态
         self.initial_redeclares = redeclares or {}
@@ -182,7 +191,7 @@ class ChessPieceSetup:
             if self.check_vars[key].get():
                 lines.append(f"{key}={var.get()}")
         
-        self.preview.insert("1.0", "\n".join(lines) if lines else "暂无更改项目")
+        self.preview.insert("1.0", "\n".join(lines) if lines else "; Nothing changed")
         self.preview.config(state="disabled")
 
     def update_preview_and_reschedule(self):

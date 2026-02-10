@@ -1,7 +1,7 @@
 import time
 import logging
+import json
 
-from src import variable as var
 from src import consts
 from src import engine as fsf
 
@@ -13,8 +13,11 @@ p2c = {0:'J',1:'C',2:'M',3:'X',4:'S',5:'A',6:'W',7:'O',8:'r',9:'b',10:'n',11:'q'
 a2n = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7,'i':8}
 n2a = {0:'a',1:'b',2:'c',3:'d',4:'e',5:'f',6:'g',7:'h',8:'i'}
 
-initial_fen = var.INITIAL_FEN
-# initial_fen = '3k5/C8/8C/9/9/9/9/1p7/5W3 w kq - 0 1'
+try:
+    with open('userdata\\engine_setting.json', 'r', encoding='ascii') as f:
+        initial_fen: str = json.load(f)['redeclares']['startFen']
+except:
+    initial_fen = "rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1"
 
 
 def fsf2beach(p):
@@ -25,7 +28,7 @@ def beach2fsf(p):
 
 class Beach:
     """ 用途：记录当前局面便于显示调用 + 调用引擎。 fen = pieces + extra """
-    def __init__(self, fen = initial_fen):
+    def __init__(self, fen=initial_fen):
         self.beach = []
         for char in fen.replace('/',''):
             if char == ' ':

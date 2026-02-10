@@ -60,7 +60,7 @@ engine_setting = Menu([
     SettingBtn("queen_inf", cmds={
         '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
         '皇后可沿直线或斜线无限移动':   'self.set_eng_stg("queen_inf", 1)',
-        '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
+        # '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
     }),
     PressBtn("更多规则设置...(实验)", cmd='self.open_chess_piece_setup()', rect=(0.25,0.8,0.5,0.05)),  # 添加新的按钮
 ], element_per_line_max=1)
@@ -558,6 +558,14 @@ class Game:
             # 保存设置并应用
             self.eng_stg.save_to_json()
             self.apply_engine_change()
+            
+            # 立即更新当前棋盘的FEN以反映新设置
+            if 'startFen' in result_data:
+                new_fen = result_data['startFen']
+                self.board.reset(fen=new_fen)
+                self.rater.refresh_fen(new_fen)
+                logger.info(f"棋盘FEN已更新为: {new_fen}")
+            
             messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
         elif app.confirm is False:
             # 用户取消

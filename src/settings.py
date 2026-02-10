@@ -125,7 +125,7 @@ class EngineStg:
         "queen_inf": {
             0: "q:B3R3",
             1: "q:BR",
-            2: "q:",  # 备用 q:WDHFNCAZG
+            # 2: "q:WDHFNCAZG",
         },
         "white_promo": {
             0: "pawnTypes = p",
@@ -133,7 +133,7 @@ class EngineStg:
                "promotionPieceTypesWhite = jcaxsm\npromotionRegionWhite = *9",
         },
         "king_enter_palace": {
-            0: "mobilityRegionBlackKing  = a1 a2 a3 b1 b2 b3 c1 c2 c3 g1 g2 g3 h1 h2 h3 i1 i2 i3 *4 *5 *6 *7 *8 *9",
+            0: "mobilityRegionBlackCustomPiece9  = a1 a2 a3 b1 b2 b3 c1 c2 c3 g1 g2 g3 h1 h2 h3 i1 i2 i3 *4 *5 *6 *7 *8 *9",
             1: "",
         },
     }
@@ -146,7 +146,7 @@ maxRank = 9
 maxFile = 9
 
 ; Note that fen and some pieces might be declared twice
-startFen = rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OOO/1A5A1/9/CMXSWSXMC w kq - 0 1
+startFen = rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
 
 customPiece1 = j:NB2RmpRcpR
 customPiece2 = x:B2
@@ -154,8 +154,8 @@ customPiece3 = o:fsW
 customPiece4 = s:K
 customPiece5 = a:mRpR
 customPiece6 = c:R
-customPiece7 = w:s
-customPiece8 = m:h
+customPiece7 = w:W
+customPiece8 = m:nN
 
 customPiece9 = k:K
 customPiece10 = $queen_inf
@@ -164,6 +164,7 @@ customPiece12 = b:B
 customPiece13 = n:N
 customPiece14 = p:mfWcfFimfR2
 
+; Redeclare
 $BLANK
 
 $white_promo
@@ -195,7 +196,7 @@ nFoldValue = loss
 nFoldValueAbsolute = true
 stalemateValue = loss
 
-mobilityRegionWhiteWazir = d1 e1 f1 d2 e2 f2 d3 e3 f3
+mobilityRegionWhiteCustomPiece7 = d1 e1 f1 d2 e2 f2 d3 e3 f3
 $king_enter_palace
 
 ; pieceToCharTable https://www.gnu.org/software/xboard/whats_new/4.9.0/index.html#tag-B1
