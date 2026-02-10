@@ -125,7 +125,7 @@ class EngineStg:
         "queen_inf": {
             0: "q:B3R3",
             1: "q:BR",
-            2: "q:WDHFNCAZG",
+            2: "q:",  # 备用 q:WDHFNCAZG
         },
         "white_promo": {
             0: "pawnTypes = p",
@@ -228,12 +228,15 @@ $king_enter_palace
     
     def load_from_json(self, f: str) -> None:
         _ = json.loads(f)
-        if 'switches' in _:    self.switches =   _['switches']
-        if 'redeclares' in _:  self.redeclares = _['redeclare_rule']
+        self.switches   = _.get('switches')   or EngineStg.swit_default
+        self.redeclares = _.get('redeclares') or {}
     
     def save_to_json(self) -> None:
         with open('userdata\\engine_setting.json', 'w', encoding='ascii') as f:
-            json.dump({'switches': self.switches}, f)
+            json.dump({
+                'switches': self.switches,
+                'redeclares': self.redeclares,
+            }, f)
     
     def export_to_ini(self) -> str:
         sub_dict: dict[str, str] = {}

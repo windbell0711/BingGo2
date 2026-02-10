@@ -59,10 +59,10 @@ engine_setting = Menu([
     }),
     SettingBtn("queen_inf", cmds={
         '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
-        '皇后可沿直线或斜线无限移动': 'self.set_eng_stg("queen_inf", 1)',
+        '皇后可沿直线或斜线无限移动':   'self.set_eng_stg("queen_inf", 1)',
         '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
     }),
-    PressBtn("更多规则设置...(实验)", cmd=''),  # TODO
+    PressBtn("更多规则设置...(实验)", cmd='self.open_chess_piece_setup()', rect=(0.25,0.8,0.5,0.05)),  # 添加新的按钮
 ], element_per_line_max=1)
 
 
@@ -541,6 +541,30 @@ class Game:
         self.ai_int = False
         self.state = 'play'
 
+    def open_chess_piece_setup(self):
+        """打开棋子走法设置器"""
+        import tkinter as tk
+        from src import ChessPieceSetup
+        
+        root = tk.Tk()
+        app = ChessPieceSetup.ChessPieceSetup(root, self.eng_stg.redeclares)
+        root.mainloop()
+        
+        # 处理结果
+        if app.confirm:
+            # 用户确认更改，获取结果数据
+            result_data = {k: v.get() for k, (v, _, _) in app.entries.items() if app.check_vars[k].get()}
+            self.eng_stg.redeclares = result_data
+            # 保存设置并应用
+            self.eng_stg.save_to_json()
+            self.apply_engine_change()
+            messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
+        elif app.confirm is False:
+            # 用户取消
+            messagebox.showinfo("取消", "设置未保存")
+        
+        # 清理
+        root.destroy()
 
     def _apply_engine_change(self):
         self.state = 'setting_wait'

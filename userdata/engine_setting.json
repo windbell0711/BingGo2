@@ -1,1 +1,1 @@
-{"switches": {"queen_inf": 2, "white_promo": 1, "king_enter_palace": 0}}
+{"switches": {"queen_inf": 0, "white_promo": 1, "king_enter_palace": 0}, "redeclares": {"customPiece2": "x:B5"}}

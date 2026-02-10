@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import webbrowser
 
-from engine import fen_is_invalid, is_betza
+from src.engine import fen_is_invalid, is_betza
 
 class ChessPieceSetup:
     @staticmethod
@@ -220,8 +220,20 @@ if __name__ == "__main__":
     # 示例重声明
     sample_redeclares = {
         'customPiece2': 'x:B5',
+        'customPiece10': 'q:WDHFNCAZG'
     }
     
     root = tk.Tk()
     app = ChessPieceSetup(root, sample_redeclares)
     root.mainloop()
+
+    # 集成测试：验证功能完整性
+    if app.confirm:
+        print("=== 集成测试结果 ===")
+        print("用户确认更改")
+        result = {k: v.get() for k, (v, _, _) in app.entries.items() if app.check_vars[k].get()}
+        print(f"更改的配置: {result}")
+        print("格式化预览:")
+        print(ChessPieceSetup.format_redeclares(result))
+    else:
+        print("用户取消操作")
