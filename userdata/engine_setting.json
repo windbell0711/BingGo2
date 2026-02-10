@@ -1,1 +1,1 @@
-{"switches": {"queen_inf": 2, "white_promo": 1, "king_enter_palace": 0}, "redeclares": {"customPiece8": "m:nN"}}
+{"switches": {"queen_inf": 0, "white_promo": 1, "king_enter_palace": 0}, "redeclares": {"startFen": "rnbk1qnbr/ppppppppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC b kq - 0 1"}}

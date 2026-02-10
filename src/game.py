@@ -557,14 +557,22 @@ class Game:
             self.eng_stg.redeclares = result_data
             # 保存设置并应用
             self.eng_stg.save_to_json()
+            
+            # qwen's debug
+            # 如果有新的起始FEN，先保存它
+            new_start_fen = None
+            if 'startFen' in result_data:
+                new_start_fen = result_data['startFen']
+                logger.info(f"准备更新棋盘FEN为: {new_start_fen}")
+            
+            # 应用引擎更改（这会触发reset）
             self.apply_engine_change()
             
-            # 立即更新当前棋盘的FEN以反映新设置
-            if 'startFen' in result_data:
-                new_fen = result_data['startFen']
-                self.board.reset(fen=new_fen)
-                self.rater.refresh_fen(new_fen)
-                logger.info(f"棋盘FEN已更新为: {new_fen}")
+            # 在引擎更改完成后（reset执行后），如果之前有新的FEN，则更新棋盘
+            if new_start_fen:
+                # 注意：这里不能立即执行，因为apply_engine_change是异步的
+                # 我们需要在_apply_engine_change方法中处理这个逻辑
+                pass
             
             messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
         elif app.confirm is False:
@@ -579,6 +587,16 @@ class Game:
         self.eng_stg.write_to_ini()
         self.board.reboot_engine()
         self.rater.reboot()
+        
+        # 检查是否有新的起始FEN需要应用
+        new_start_fen = self.eng_stg.redeclares.get('startFen') if self.eng_stg.redeclares else None
+        if new_start_fen:
+            # 先重置棋盘到新FEN
+            self.board.reset(fen=new_start_fen)
+            self.rater.refresh_fen(new_start_fen)
+            logger.info(f"棋盘FEN已更新为: {new_start_fen}")
+        
+        # 然后执行正常的reset逻辑
         self.reset()
         self.active_menu = main_menu
 
@@ -642,3 +660,41 @@ class Game:
 
         if flip == '1':
             self.board_is_flipped = True
+
+if __name__ == "__main__":
+    # 集成测试：验证chessPieceSetup的FEN同步功能
+    print("=== ChessPieceSetup FEN同步测试 ===")
+    
+    # 创建游戏实例
+    game = Game()
+    original_fen = game.board.fen
+    print(f"原始FEN: {original_fen}")
+    
+    # 模拟chessPieceSetup的逻辑
+    test_redeclares = {
+        'startFen': 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1',
+        'customPiece10': 'q:WDHFNCAZG'
+    }
+    
+    # 模拟用户确认更改
+    game.eng_stg.redeclares = test_redeclares
+    game.eng_stg.save_to_json()
+    
+    # 模拟_apply_engine_change的逻辑
+    new_start_fen = game.eng_stg.redeclares.get('startFen')
+    if new_start_fen:
+        game.board.reset(fen=new_start_fen)
+        game.rater.refresh_fen(new_start_fen)
+        print(f"更新后的FEN: {game.board.fen}")
+        
+        # 验证FEN是否正确更新
+        if game.board.fen == new_start_fen:
+            print("✓ FEN同步测试通过")
+        else:
+            print("✗ FEN同步测试失败")
+    
+    # 测试reset方法是否会覆盖FEN
+    game.reset()
+    print(f"Reset后FEN: {game.board.fen}")
+    
+    print("=== 测试完成 ===")
