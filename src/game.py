@@ -62,6 +62,7 @@ engine_setting = Menu([
         '皇后可沿直线或斜线无限移动': 'self.set_eng_stg("queen_inf", 1)',
         '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
     }),
+    PressBtn("更多规则设置...(实验)", cmd=''),  # TODO
 ], element_per_line_max=1)
 
 
