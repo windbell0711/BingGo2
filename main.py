@@ -17,8 +17,8 @@ logging.basicConfig(
 # 保证必要文件就位
 import os
 FILES = (
-    "engine/binggo.ini",
-    "engine/config.ini",
+    # "engine/binggo.ini",
+    # "engine/config.ini",
     "engine/fairy-stockfish-largeboards_x86-64-bmi2-latest.exe",
 )
 for file in FILES:

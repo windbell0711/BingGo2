@@ -136,6 +136,9 @@ class EngineStg:
             1: "",
         },
     }
+    swit_default = {
+        "queen_inf": 0, "white_promo": 1, "king_enter_palace": 0
+    }
     ini_template = """
 [binggo]
 maxRank = 9
@@ -215,8 +218,12 @@ $king_enter_palace
     def __iter__(self):  raise NotImplementedError
     
     def load_from_default(self) -> None:
-        with open('userdata\\engine_setting.json', 'r', encoding='ascii') as f:
-            self.load_from_json(f.read())
+        try:
+            with open('userdata\\engine_setting.json', 'r', encoding='ascii') as f:
+                self.load_from_json(f.read())
+        except FileNotFoundError as e:
+            logger.warning("读取引擎设置失败，使用默认值: " + str(e))
+            self.switches = EngineStg.swit_default
     
     def load_from_json(self, f: str) -> None:
         _ = json.loads(f)
