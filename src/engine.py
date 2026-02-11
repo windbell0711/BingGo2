@@ -21,17 +21,26 @@ def is_pgn(move: str) -> bool:
     return (move[0] in BOARD_FILES and move[2] in BOARD_FILES and
             move[1] in BOARD_RANKS and move[3] in BOARD_RANKS)
 
-def is_betza(betza: str) -> bool:
+def betza_is_invalid(betza: str) -> int:
+    VALID, INVALID, VERY_INVALID = 0, 1, 2
     if not betza or betza.count(':') > 1:
-        return False
+        return VERY_INVALID
     betza = betza.replace(' ', '')
     if ':' in betza:
-        if betza[:betza.find(':')] not in PIECE_TYPS_LOWER:
-            return False
-        if betza.find(':') + 1 == len(betza):
-            return True  # 'q:' 走不动，但是也行
+        if betza.find(':') != 1 or betza[:1] not in PIECE_TYPS_LOWER:
+            return VERY_INVALID
+        if len(betza) == 2:
+            return VALID  # 如'q:'走不动，但是也允许
         betza = betza[betza.find(':')+1:]
-    return True  # TODO
+    if betza[0].isdigit():  return VERY_INVALID
+    if betza[-1] in 'abcdefghijklmnopqrstuvwxyz': return VERY_INVALID
+    for i in range(len(betza)):
+        if betza[i] in '012345678':
+            if betza[i-1] not in 'WFNRBQ':
+                return INVALID
+        elif betza[i] not in 'WFNRBQDHAGCZKfblrvscmgpjni':
+            return INVALID
+    return VALID
     
 def fen_is_invalid(fen: str) -> str:
     """检查FEN格式是否合法，返回错误信息（若合法则返回空字符串）"""

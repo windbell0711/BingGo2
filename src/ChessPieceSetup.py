@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import webbrowser
 
-from src.engine import fen_is_invalid, is_betza
+from src.engine import fen_is_invalid, betza_is_invalid
 
 def format_redeclares(redeclares: dict[str, str]) -> str:
     """将重声明字典格式化为字符串"""
@@ -66,8 +66,8 @@ class ChessPieceSetup:
         # 快捷按钮
         ttk.Button(quick_frame, text="切换先手", command=self.toggle_side).pack(side=tk.LEFT, padx=5)
         ttk.Button(quick_frame, text="恢复初始", command=self.reset_to_original).pack(side=tk.LEFT, padx=5)
+        ttk.Button(quick_frame, text="查看教程", command=lambda: webbrowser.open("https://gitee.com/windbell0711/BingGo2/blob/main/readme/betza.md")).pack(side=tk.LEFT, padx=5)
         ttk.Button(quick_frame, text="查看文档", command=lambda: webbrowser.open("https://www.gnu.org/software/xboard/Betza.html")).pack(side=tk.LEFT, padx=5)
-        ttk.Button(quick_frame, text="查看教程", command=lambda: webbrowser.open("https://www.gnu.org/software/xboard/Betza.html")).pack(side=tk.LEFT, padx=5)
         
         # 主体内容（左右分栏）
         main_frame = ttk.Frame(content_frame)
@@ -215,9 +215,20 @@ class ChessPieceSetup:
                     messagebox.showerror("错误", f"FEN串{value}格式错误\n{fen_is_invalid(result['startFen'])}")
                     return
             else:
-                if not is_betza(value):
-                    messagebox.showerror("错误", f"{key} {value}\n不符合Betza格式")
+                if '：' in value:
+                    messagebox.showerror("错误", f"{key}的betza表达式中包含中文冒号，请修改为英文冒号。")
                     return
+                if ':' not in value:
+                    messagebox.showerror("错误", f"{key}的betza表达式缺少冒号，格式应为：“小写字母:表达式”。")
+                    return
+                if betza_is_invalid(value):
+                    if betza_is_invalid(value) == 2:
+                        messagebox.showerror("错误", f"{key}不符合betza格式，请检查或查看教程。")
+                        return
+                    elif betza_is_invalid(value) == 1:
+                        ret = messagebox.askquestion("警告", f"{key}的betza表达式{value}可能有误。\n除非你确信输入无误，否则请返回检查。\n是否返回检查？", icon='warning', default='yes')
+                        if ret == 'yes':
+                            return
         self.confirm = True
         print("棋子配置信息:")
         print(f"更改的数据: {result}")

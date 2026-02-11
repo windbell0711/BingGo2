@@ -552,21 +552,24 @@ class Game:
         root.mainloop()
         
         # 处理结果
-        if app.confirm:
-            # 用户确认更改，获取结果数据
-            result_data = {k: v.get() for k, (v, _, _) in app.entries.items() if app.check_vars[k].get()}
-            self.eng_stg.redeclares = result_data
-            # 保存设置并应用
-            self.eng_stg.save_to_json()
-                        
-            # 应用引擎更改
-            var.init_fen = result_data.get('startFen') or var.INIT_FEN_DEFAULT
-            self.apply_engine_change()
-            
-            messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
-        elif app.confirm is False:
-            # 用户取消
-            messagebox.showinfo("取消", "设置未保存")
+        match app.confirm:
+            case True:
+                # 用户确认更改，获取结果数据
+                result_data = {k: v.get() for k, (v, _, _) in app.entries.items() if app.check_vars[k].get()}
+                self.eng_stg.redeclares = result_data
+                # 保存设置并应用
+                self.eng_stg.save_to_json()
+                            
+                # 应用引擎更改
+                var.init_fen = result_data.get('startFen') or var.INIT_FEN_DEFAULT
+                self.apply_engine_change()
+                
+                messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
+            case False:
+                # 用户取消
+                messagebox.showinfo("取消", "设置未保存")
+            case _:
+                logger.warning(f"{app.confirm =}")
         
         # 清理
         root.destroy()

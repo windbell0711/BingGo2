@@ -86,7 +86,7 @@ class Beach:
             self.fen2beach(self.fen)
             return
         if fen is None:
-            self.fen = self.initial_fen
+            self.fen = var.init_fen
         else:
             self.fen = self.initial_fen = fen
         self.fen2beach(self.fen)
