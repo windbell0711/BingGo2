@@ -1,4 +1,5 @@
 from string import Template
+import os
 import json
 import logging
 from typing import Literal, Optional
@@ -233,6 +234,7 @@ $king_enter_palace
         self.redeclares = _.get('redeclares') or {}
     
     def save_to_json(self) -> None:
+        if not os.path.exists('userdata'):  os.mkdir('userdata')
         with open('userdata\\engine_setting.json', 'w', encoding='ascii') as f:
             json.dump({
                 'switches': self.switches,

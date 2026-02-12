@@ -1,6 +1,6 @@
 import logging
 import pygame
-import sys, os
+import sys, os, webbrowser, time
 from tkinter import messagebox
 
 from src import game as gm
@@ -54,6 +54,19 @@ def raise_size_of_rect(rect,side_length):
 
 def play():
     pygame.init()
+
+    if os.path.exists(path:='binggo.log'):
+        # 询问是否打开帮助
+        if time.time() - os.path.getctime(path) < 60:  # 检查文件是否在一分钟内创建
+            if messagebox.askyesno('提示', '欢迎来到BingGo！\n是否需要打开帮助？如果否，你可以稍后在游戏设置中找到帮助。'):
+                webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/README.md')
+        # 询问是否清理log文件
+        if os.path.getsize(path) > 1024 * 256:  # 检查log文件大小是否超过限制
+            if messagebox.askyesno('提示', '游戏日志文件过大，是否自动清理？（建议）'):
+                with open('binggo.log', 'w', encoding='utf-8') as f:
+                    f.write('')
+                logger.info('binggo.log大小超过256KB，经用户同意已清理游戏日志文件')
+
     try:
         with open('userdata\\display_setting.ini', 'r', encoding='ascii') as f:
             wh = f.read()

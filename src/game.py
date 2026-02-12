@@ -54,8 +54,8 @@ engine_setting = Menu([
         '允许中国象棋升变':   'self.set_eng_stg("white_promo", 1)',
     }),
     SettingBtn("king_enter_palace", cmds={
-        '不允许国王进入九宫': 'self.set_eng_stg("king_in_palace", 0)',
-        '允许国王进入九宫':   'self.set_eng_stg("king_in_palace", 1)',
+        '不允许国王进入九宫': 'self.set_eng_stg("king_enter_palace", 0)',
+        '允许国王进入九宫':   'self.set_eng_stg("king_enter_palace", 1)',
     }),
     SettingBtn("queen_inf", cmds={
         '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
