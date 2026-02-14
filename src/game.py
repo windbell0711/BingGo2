@@ -40,8 +40,8 @@ main_menu = Menu([
         '评分条关闭': 'self.show_ai_bar = False',
         '评分条打开': 'self.show_ai_bar = True'
     }),
-    PressBtn("create", "self.create_room(self.eng_stg.export_to_json())"),
-    PressBtn("join", "self.join_room()"),
+    PressBtn("创建房间", "self.create_room(self.eng_stg.export_to_json())"),
+    PressBtn("加入房间", "self.join_room()"),
     PressBtn("帮助", "webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/README.md')",
              rect=(0.85,0.8,0.1,0.05), shade_time_max=0),
     PressBtn("赞赏", "webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/readme/support.md')",
@@ -65,7 +65,7 @@ engine_setting = Menu([
     }),
     SettingBtn("queen_inf", cmds={
         '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
-        '皇后可沿直线或斜线无限移动':   'self.set_eng_stg("queen_inf", 1)',
+        '皇后原本走法':   'self.set_eng_stg("queen_inf", 1)',
         # '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
     }),
     PressBtn("更多规则设置...(实验)", cmd='self.open_chess_piece_setup()', rect=(0.25,0.8,0.5,0.05)),  # 添加新的按钮
@@ -198,7 +198,7 @@ class Game:
         return (self.board_is_flipped, self.steady_pieces, self. piece_animations,
                 self.last_choice_piece, self.highlight_paths, self.UIs, self.pressed_button,
                 self.active_menu if self.state == 'setting' or self.state == 'setting_wait' else None,
-                self.red_rate if self.show_ai_bar else -1)
+                self.red_rate if (self.show_ai_bar and self.state not in ('multiplayer', 'promotions', 'mltwait')) else -1)
 
     def _gm(self):
         self.on_get = True
