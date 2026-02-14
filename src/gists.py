@@ -256,16 +256,16 @@ class Messager(Gist):
         """返回对方的规则json或None"""
         room = msglog.askstring("请输入对方创建的房间名:")
         if not room:
-            msglog.error(msg:='房间名未输入，无法启动联机。')
+            msglog.error('房间名未输入，无法启动联机。')
             return
         ret = self.find_session_id(room, needs_waiting=True)
         if not ret:
-            msglog.error(msg:='未找到指定房间，无法启动联机。')
+            msglog.error('未找到指定房间，无法启动联机。')
             return
         self.gist_id = ret
         t, s, msg = json.loads(self.read_file("main.json"))
         if s != 'waiting':
-            msglog.warning(msg:=f'可能找到了错误的房间，无法同步规则设置，请确保房间已创建，且房间名不要过于常见。\n上一条消息时间：{t}, 发送者：{s}')
+            msglog.warning(f'可能找到了错误的房间，无法同步规则设置，请确保房间已创建，且房间名不要过于常见。\n上一条消息时间：{t}, 发送者：{s}')
             return
         return msg
 

@@ -247,7 +247,7 @@ class Game:
     def create_room(self, *args, **kwargs):
         match self.gist.开大床房(*args, **kwargs):
             case None:
-                msglog.info('房间名未输入，无法启动联机。')
+                msglog.error('房间名未输入，无法启动联机。')
             case False:
                 msglog.error("创建房间失败")
             case True:
@@ -398,7 +398,12 @@ class Game:
         else:
             command = None
         if command is not None:
-            exec(command)
+            if elem.name in ("创建房间", "加入房间"):
+                time.sleep(0.500)  # command执行前500ms不接受操作
+                exec(command)
+                time.sleep(0.250)  # command执行后250ms不接受操作
+            else:
+                exec(command)
 
     def handle_promotion_select(self, p):
         tp = beach.fsf2beach(self.promotion_move[2:4])

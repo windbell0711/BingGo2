@@ -2,15 +2,16 @@
 
 A completely rewritten version of BingGo.
 
-全新重写： 象棋 vs. 国象！ B站账号：[BingGo独立游戏](https://space.bilibili.com/509538586)，欢迎关注！~
+**全新重写： 象棋 vs. 国象！ B站账号：[BingGo独立游戏](https://space.bilibili.com/509538586)，欢迎关注！~**
 
 **最新版本提供了[联机对战](#联机对战)功能，来和朋友玩一局吧！**
+
 
 ## 界面介绍
 
 ![main_page](readme/main_page.png)
 
-![setting_page](readme/setting_page.png)
+<!-- ![setting_page](readme/setting_page.png) -->
 
 
 ## 规则介绍
@@ -34,15 +35,13 @@ A completely rewritten version of BingGo.
 
 4. **炮**可以越子移动。
 
-5. **兵**到底线可以升变为新棋子**将**（注意不是原象棋中的将，可以被吃），获得中国象棋所有子的走法。**你可以在设置中关闭这一特性。**
+5. **卒**到底线**默认无法升变**。但你可以**通过设置开启**这一特性，将底线卒升变为新棋子**将**（注意不是原象棋中的将，可以被吃），获得中国象棋所有子的走法。
 
 国象方：
 
-6. 削弱了**后**，最多只能移动三格。**你可以在设置中关闭这一特性。**
+6. **王**不允许进入九宫。**你可以在设置中关闭这一特性。**
 
-7. **王**不允许进入九宫。**你可以在设置中关闭这一特性。**
-
-8. 保留**王车易位**特性，删去**过路兵**走法。
+7. 保留**王车易位**特性，删去**过路兵**走法。
 
 您也可以**使用betza修改棋子走法**，betza使用教程参见：[readme/betza.md](readme/betza.md)。
 
