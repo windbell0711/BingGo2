@@ -30,8 +30,8 @@ main_menu = Menu([
         '专家': 'self.ai_think_time = 5000',
     }, n=1),
     SettingBtn("提示", name_explicit=True, cmds={
-        '大师': 'self.ai_think_time = 1000',
-        '专家': 'self.ai_think_time = 5000',
+        '大师': 'self.hint_think_time = 1000',
+        '专家': 'self.hint_think_time = 5000',
     }),
     PressBtn("保存", "self.save()", shade_time_max=0),
     PressBtn("载入", "self.load()", shade_time_max=0),
@@ -189,7 +189,7 @@ class Game:
                 self.board_is_flipped ^= 1
                 self.pressed_button = [96, 10]
             elif display_p == 95:
-                if msglog.askyesno("确认退出", "真的要退出联机模式吗？对方可能正在期待你的下一步棋 qwq"):
+                if msglog.askyesno("真的要退出联机模式吗？对方可能正在期待你的下一步棋 qwq", "确认退出"):
                     logger.info("用户退出联机模式")
                     self.exit_mlt()
             self.process_UIs(p)
@@ -210,7 +210,7 @@ class Game:
             self.state = 'multiplayer'
             _, game_end = self.board.get_pms()
             if game_end:
-                self.state = 'play'
+                self.exit_mlt()
         self.on_get = False
 
     def _sm(self, _message):
@@ -259,6 +259,8 @@ class Game:
                 self.state = 'mltwait'
 
     def exit_mlt(self):
+        self.rater.reboot()
+        self.rater.refresh_fen(self.board.fen)
         self.state = 'play'
 
     def handle_mlt_promotion(self, p):
@@ -296,7 +298,7 @@ class Game:
         self.gret()
         _, game_end = self.board.get_pms()
         if game_end:
-            self.state = 'play'
+            self.exit_mlt()
         Thread(target=self._sm, args=(move,)).start()
 
     def ana_mov(self, beach_p):

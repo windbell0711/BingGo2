@@ -401,7 +401,7 @@ class BinggoEngine:
 
 if __name__ == "__main__":
     eng = BinggoEngine(debug_file="engine\\debug.log")
-    root_fen = "rnbk1qnbr/pppp1pppp/9/9/9/OOO1O1OO1/1A5A1/9/CMXSWSXMC w kq - 0 1"
+    root_fen = "rbnk1qbnr/pppp1pppp/9/9/9/OOO1O1OO1/1A5A1/9/CMXSWSXMC w kq - 0 1"
     fen = eng.perform_move(root_fen, "a1a2 f9a4 a2a1".split())
     print(fen)
     eng._d()

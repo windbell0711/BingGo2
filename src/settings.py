@@ -164,7 +164,7 @@ maxRank = 9
 maxFile = 9
 
 ; Note that fen and some pieces might be declared twice
-startFen = rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
+startFen = rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
 
 customPiece1 = j:NB2RmpRcpR
 customPiece2 = x:B2
