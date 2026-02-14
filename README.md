@@ -74,3 +74,5 @@ gitee下载：
 ## 致谢
 
 *Powered by [FairyStockFish](https://fairy-stockfish.github.io/).*
+
+*[pygame-ce](https://pyga.me/docs/index.html)*

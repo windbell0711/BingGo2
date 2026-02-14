@@ -13,8 +13,8 @@ def format_redeclares(redeclares: dict[str, str]) -> str:
 
 class ChessPieceSetup:
     blank_default = {
-        'startFen': 'rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1',
-        'customPiece1': 'j:NB2RmpRcpR', 
+        'startFen': 'rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1',
+        'customPiece1': 'j:nNB2RpR', 
         'customPiece2': 'x:B2', 
         'customPiece3': 'o:fsW',
         'customPiece4': 's:K', 
@@ -203,6 +203,7 @@ class ChessPieceSetup:
         self.confirm = False
         self.running = False
         self.root.quit()
+        self.root.destroy()
     
     def on_confirm(self):
         result = {k: v.get() for k, (v, _, _) in self.entries.items() if self.check_vars[k].get()}
@@ -234,6 +235,7 @@ class ChessPieceSetup:
         print(f"更改的数据: {result}")
         self.running = False
         self.root.quit()
+        self.root.destroy()
 
 
 if __name__ == "__main__":

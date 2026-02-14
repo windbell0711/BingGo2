@@ -4,17 +4,20 @@
 https://gitee.com/api/v5/swagger#/getV5Gists
 """
 import requests
+import json
 import time
 import logging
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Literal
 
-raise NotImplementedError
+from src import variable as var
+from src.consts import ACCESS_TOKEN
+from src.LogMsgboxManager import MsgLog
 
-# 获取模块专用logger
 logger = logging.getLogger(__name__)
+msglog = MsgLog(logger, var.root)
+
 
 class Gist:
-    """Gist客户端类，封装Gitee Gist的API操作"""
     def __init__(self, access_token: str):
         """
         初始化Gist客户端
@@ -179,9 +182,7 @@ class Gist:
     
     def check_internet(self) -> bool:
         """
-        检查网络连接
-        
-        :return: 网络连接正常返回True，否则返回False
+        检查网络连接是否正常
         """
         try:
             response = requests.get(f"{self.api_url}mva7dgrzfkxw58b9ipet383",
@@ -197,7 +198,7 @@ class Gist:
         查找指定描述的会话ID
 
         :param description: 会话描述
-        :param needs_waiting: 是否只需要等待状态的会话
+        :param needs_waiting: 是否只需要等待状态的会话 现在没啥用好像
         :return session_id: 会话ID，未找到返回None
         """
         try:
@@ -227,56 +228,59 @@ class Gist:
         return None
 
 
-# 使用示例
-if __name__ == "__main__":
-    # 初始化Gist客户端
-    ACCESS_TOKEN = "f61fe45a79fd154f0702452879068865"  # 请替换为你的访问令牌
-    gist = Gist(ACCESS_TOKEN)
-    
-    # 检查网络连接
-    logger.info(f"网络连接: {gist.check_internet()}")
-    
-    # 示例1: 创建会话
-    room_name = "test_room"
-    initial_files = {
-        "status.txt": "hello gists!",
-        "player1.txt": "喵",
-        "player2.txt": "喵喵",
-    }
-    
-    gist_id = gist.create_session(room_name, initial_files)
-    if gist_id:
-        logger.info(f"会话创建成功，ID: {gist_id}")
-        gist.gist_id = gist_id  # 设置当前操作的gist_id
-    else:
-        logger.error("会话创建失败")
-        # 使用示例gist_id进行后续测试
-        gist.gist_id = "existing_gist_id_here"
-    
-    try:
-        # 示例2: 读取文件
-        content = gist.read_file("status.txt")
-        logger.info(f"{gist.read_file('status.txt') = }")
-        logger.info(f"{gist.read_file('player1.txt') = }")
-        logger.info(f"{gist.read_file('player2.txt') = }")
+class Messager(Gist):
+    """注意，main.json只允许你说一句，我说一句，不能说两句！"""
+
+    # 建议调用api间隔：1~3秒，不要过于频繁
+
+    def __init__(self, access_token: str, idt: Literal['home', 'away']):
+        super().__init__(access_token)
+        self.files = ["main.json"]
+        self.idt = idt
+
+    def 开大床房(self, rule_stg: str) -> Optional[bool]:
+        room = msglog.askstring("请输入新房间名:")
+        if not room:  return None
+        if not self.create_session(
+            room_name=room, 
+            files={i: json.dumps([
+                time.time(),
+                'waiting',
+                rule_stg,
+            ]) for i in self.files}
+        ):
+            return False
+        return True
+
+    def 进去了哦(self) -> Optional[str]:
+        """返回对方的规则json或None"""
+        room = msglog.askstring("请输入对方创建的房间名:")
+        if not room:
+            msglog.error(msg:='房间名未输入，无法启动联机。')
+            return
+        ret = self.find_session_id(room, needs_waiting=True)
+        if not ret:
+            msglog.error(msg:='未找到指定房间，无法启动联机。')
+            return
+        self.gist_id = ret
+        t, s, msg = json.loads(self.read_file("main.json"))
+        if s != 'waiting':
+            msglog.warning(msg:=f'可能找到了错误的房间，无法同步规则设置，请确保房间已创建，且房间名不要过于常见。\n上一条消息时间：{t}, 发送者：{s}')
+            return
+        return msg
+
+    def send(self, msg: str) -> bool:
+        return self.write_file(
+            file_name="main.json",
+            content=json.dumps([
+                int(time.time()),
+                self.idt,
+                msg,
+            ])
+        )
+
+    def get(self) -> Optional[str]:
+        t, s, msg = json.loads(self.read_file("main.json"))
+        if s == self.idt or s == 'waiting':  return None
+        return msg
         
-        # 示例3: 写入文件
-        success = gist.write_file("player1.txt", "啊啊啊啊要不行了")
-        logger.info(f"写入结果: {success}")
-        logger.info(f"{gist.read_file('status.txt') = }")
-        logger.info(f"{gist.read_file('player1.txt') = }")
-        logger.info(f"{gist.read_file('player2.txt') = }")
-        
-        # 示例4: 等待文件更新（需要另一个进程或手动更新文件内容）
-        # print("等待player2.txt更新...")
-        # 注意：这行代码会阻塞，直到文件内容更新
-        # updated_content = gist.wait_for_update("player2.txt")
-        # print(f"更新后的内容: {updated_content}")
-        
-    except FileNotFoundError as e:
-        logger.error(f"文件错误: {e}")
-    
-    # 示例5: 查找会话
-    session_id = gist.find_session_id("test_room")
-    if session_id:
-        logger.info(f"找到会话ID: {session_id}")

@@ -1,19 +1,23 @@
 import logging
 import os
 import json
+import time
 import webbrowser  # noinspection
 from threading import Thread
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 
+from src import gists as gts
 from src import beach
 from src import rate
 from src import consts
 from src import variable as var
 from src.settings import BaseButton, PressBtn, SettingBtn, Menu
 from src.settings import EngineStg
+from src.LogMsgboxManager import MsgLog
 
 logger = logging.getLogger(__name__)
-        
+msglog = MsgLog(logger, var.root)
+
 
 main_menu = Menu([
     PressBtn("返回游戏", "self.state = 'play'", rect=(0.55,0.9,0.2,0.05), shade_time_max=0),
@@ -26,8 +30,8 @@ main_menu = Menu([
         '专家': 'self.ai_think_time = 5000',
     }, n=1),
     SettingBtn("提示", name_explicit=True, cmds={
-        '大师': 'self.ai_think_time = 1000',
-        '专家': 'self.ai_think_time = 5000',
+        '大师': 'self.hint_think_time = 1000',
+        '专家': 'self.hint_think_time = 5000',
     }),
     PressBtn("保存", "self.save()", shade_time_max=0),
     PressBtn("载入", "self.load()", shade_time_max=0),
@@ -36,9 +40,11 @@ main_menu = Menu([
         '评分条关闭': 'self.show_ai_bar = False',
         '评分条打开': 'self.show_ai_bar = True'
     }),
+    PressBtn("创建房间", "self.create_room(self.eng_stg.export_to_json())"),
+    PressBtn("加入房间", "self.join_room()"),
     PressBtn("帮助", "webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/README.md')",
              rect=(0.85,0.8,0.1,0.05), shade_time_max=0),
-    PressBtn("赞赏", "webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/readme/support.md')",
+    PressBtn("赞赏", "webbrowser.open('https://gitee.com/windbell0711/BingGo2/raw/main/readme/support.jpg')",
              rect=(0.85,0.9,0.1,0.05), shade_time_max=0),
 ])
 
@@ -58,9 +64,9 @@ engine_setting = Menu([
         '允许国王进入九宫':   'self.set_eng_stg("king_enter_palace", 1)',
     }),
     SettingBtn("queen_inf", cmds={
-        '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
-        '皇后可沿直线或斜线无限移动':   'self.set_eng_stg("queen_inf", 1)',
-        # '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
+        '皇后移动距离不能大于三': 'self.set_eng_stg("queen_inf", 0)',
+        '皇后沿直线斜线无限移动': 'self.set_eng_stg("queen_inf", 1)',
+        # '自定义皇后走法(实验)': 'self.set_eng_stg("queen_inf", 2)',
     }),
     PressBtn("更多规则设置...(实验)", cmd='self.open_chess_piece_setup()', rect=(0.25,0.8,0.5,0.05)),  # 添加新的按钮
 ], element_per_line_max=1)
@@ -103,7 +109,10 @@ class Game:
             self.load_user_setting()
         except Exception as e:
             logger.warning(f"加载用户设置失败: {e}")
-    
+        # Gist相关
+        self.gist = gts.Messager(gts.ACCESS_TOKEN, str(time.time()))
+        self.on_get = False
+
     @property
     def w_promotion_allowed(self):
         return self.eng_stg.switches['white_promo']
@@ -140,7 +149,7 @@ class Game:
                     self.handle_promotion_select(display_p)
         elif self.state == 'setting_wait':
             for elem in self.active_menu:
-                elem.tick_update(c, p)            
+                elem.tick_update(c, p)
         elif self.state == 'setting':
             for elem in self.active_menu:
                 elem.tick_update(c,p)
@@ -152,12 +161,210 @@ class Game:
                     rx = mx / w
                     ry = (my - (h - w) / 2) / w
                 self.handle_menu_click(rx, ry)
+        elif self.state == 'multiplayer':
+            if display_p is not None:
+                if 0 <= display_p <= 80:
+                    move = self.ana_mov(display_p if not self.board_is_flipped else 80 - display_p)
+                    if move is not None:
+                        self.apply_mlt_move(move)
+                elif 81 <= display_p:
+                    pass
+            self.process_animation()
+            self.process_steady_pieces()
+        elif self.state == 'promotions':
+            if display_p is not None:
+                if self.board_is_flipped:
+                    self.handle_mlt_promotion(80-display_p)
+                else:
+                    self.handle_mlt_promotion(display_p)
+            self.process_steady_pieces()
+        elif self.state == 'mltwait':
+            self.process_animation()
+            if int(time.time())%2 == 0 and not self.on_get:
+                Thread(target=self._gm).start()
+            self.process_animation()
+            self.process_steady_pieces()
+        if self.state in ('multiplayer', 'promotions', 'mltwait'):
+            if display_p == 96:
+                self.board_is_flipped ^= 1
+                self.pressed_button = [96, 10]
+            elif display_p == 95:
+                if msglog.askyesno("真的要退出联机模式吗？对方可能正在期待你的下一步棋 qwq", "确认退出"):
+                    logger.info("用户退出联机模式")
+                    self.exit_mlt()
+            self.process_UIs(p)
 
         # 返回全部显示组件
         return (self.board_is_flipped, self.steady_pieces, self. piece_animations,
                 self.last_choice_piece, self.highlight_paths, self.UIs, self.pressed_button,
                 self.active_menu if self.state == 'setting' or self.state == 'setting_wait' else None,
-                self.red_rate if self.show_ai_bar else -1)
+                self.red_rate if (self.show_ai_bar and self.state not in ('multiplayer', 'promotions', 'mltwait')) else -1)
+
+    def _gm(self):
+        self.on_get = True
+        _move = self.gist.get()
+        if _move:
+            print(_move)
+            self.moves.append(_move)
+            self.gret()
+            self.state = 'multiplayer'
+            _, game_end = self.board.get_pms()
+            if game_end:
+                self.exit_mlt()
+        self.on_get = False
+
+    def _sm(self, _message):
+        if self.gist.send(_message):
+            if self.state == 'multiplayer':
+                self.state = 'mltwait'
+            return
+        if msglog.askyesno("发送意外失败\n点击是：尝试重新发送\n点击否：结束对局"):
+            if self.gist.send(_message):
+                if self.state == 'multiplayer':
+                    self.state = 'mltwait'
+                return
+        self.exit_mlt()
+        msglog.error(f"消息{_message}发送失败，已退出联机模式")
+
+
+    def join_room(self, *args, **kwargs):
+        try:
+            ret = self.gist.进去了哦(*args, **kwargs)
+            assert ret
+            self.eng_stg.load_from_json(ret)
+        except AssertionError: return
+        except Exception:
+            msglog.error("加入房间失败")
+            return
+        self.eng_stg.write_to_ini()
+        msglog.info(self.eng_stg.export_to_text() + "\n您是先手，游戏即将开始...", title='当前游戏规则')
+        self.reset()
+        fen = self.eng_stg.redeclares.get('startFen') or var.INIT_FEN_DEFAULT
+        self.board.reset(fen=fen)
+        self.board.reboot_engine()
+        self.state = 'multiplayer'
+
+    def create_room(self, *args, **kwargs):
+        match self.gist.开大床房(*args, **kwargs):
+            case None:
+                msglog.info('房间名未输入，无法启动联机。')
+            case False:
+                msglog.error("创建房间失败")
+            case True:
+                msglog.info(self.eng_stg.export_to_text(), title='当前游戏规则')
+                self.reset()
+                fen = self.eng_stg.redeclares.get('startFen') or var.INIT_FEN_DEFAULT
+                self.board.reset(fen=fen)
+                self.board.reboot_engine()
+                self.state = 'mltwait'
+
+    def exit_mlt(self):
+        self.rater.reboot()
+        self.rater.refresh_fen(self.board.fen)
+        self.state = 'play'
+
+    def handle_mlt_promotion(self, p):
+        tp = beach.fsf2beach(self.promotion_move[2:4])
+        z = None
+        if tp // 9 == 8:
+            if p == tp:
+                z = 'q'
+            elif p == tp -9:
+                z = 'n'
+            elif p == tp -18:
+                z = 'b'
+            elif p == tp - 27:
+                z = 'r'
+        else:
+            if p == tp:
+                z = 'j'
+            elif p == tp +9:
+                z = 'c'
+            elif p == tp +18:
+                z = 'm'
+            elif p == tp +27:
+                z = 'x'
+            elif p == tp +36:
+                z = 's'
+            elif p == tp +45:
+                z = 'a'
+        if z is not None:
+            self.apply_mlt_move(self.promotion_move+z)
+
+    def apply_mlt_move(self, move):
+        if len(self.moves) != self.move_step:
+            self.moves = self.moves[:self.move_step]
+        self.moves.append(move)
+        self.gret()
+        _, game_end = self.board.get_pms()
+        if game_end:
+            self.exit_mlt()
+        Thread(target=self._sm, args=(move,)).start()
+
+    def ana_mov(self, beach_p):
+        # 是一步走子
+        if beach_p in self.highlight_paths:
+            # 添加动画 并且更新 beach 状态
+            fp = self.last_choice_piece[0]
+            move = beach.beach2fsf(fp) + beach.beach2fsf(beach_p)
+            tp = beach_p
+            # 如果走子是升变
+            if self.board[fp] == 13 and tp // 9 == 8:
+                self.state = 'promotions'
+                self.highlight_paths.clear()
+                self.promotion_move = move
+                self.piece_animations.append((-1, tp, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 9, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 18, -1, 1, 14))
+                self.piece_animations.append((-1, tp - 27, -1, 1, 14))
+                self.piece_animations.append((-1, tp, -1, 1, 11))
+                self.piece_animations.append((-1, tp - 9, -1, 1, 10))
+                self.piece_animations.append((-1, tp - 18, -1, 1, 9))
+                self.piece_animations.append((-1, tp - 27, -1, 1, 8))
+                return None
+            # 中国象棋的升变
+            elif self.w_promotion_allowed == True and self.board[fp] == 7 and tp // 9 == 0:
+                self.state = 'promotions'
+                self.highlight_paths.clear()
+                self.promotion_move = move
+                self.piece_animations.append((-1, tp, -1, 1, 14))
+                self.piece_animations.append((-1, tp + 9, -1, 1, 14))
+                self.piece_animations.append((-1, tp + 18, -1, 1, 14))
+                self.piece_animations.append((-1, tp + 27, -1, 1, 14))
+                self.piece_animations.append((-1, tp + 36, -1, 1, 14))
+                self.piece_animations.append((-1, tp + 45, -1, 1, 14))
+                self.piece_animations.append((-1, tp, -1, 1, 0))
+                self.piece_animations.append((-1, tp + 9, -1, 1, 1))
+                self.piece_animations.append((-1, tp + 18, -1, 1, 2))
+                self.piece_animations.append((-1, tp + 27, -1, 1, 3))
+                self.piece_animations.append((-1, tp + 36, -1, 1, 4))
+                self.piece_animations.append((-1, tp + 45, -1, 1, 5))
+                return None
+            self.reset_special_pieces_show()
+            return move
+        # 如果没选子或选了一样的，重置
+        if beach_p is None or beach_p == self.last_choice_piece[0]:
+            self.reset_special_pieces_show()
+            return None
+        self.highlight_paths, game_end = self.board.get_pms(beach_p)
+        # 将杀了
+        if game_end:
+            self.reset_special_pieces_show()
+            self.do_checkmate_animation(delay=0)
+            return None
+        # 如果子走不动路，重置
+        if not self.highlight_paths:
+            self.reset_special_pieces_show()
+            p, typ = beach_p, self.board[beach_p]
+            if typ >= 0:
+                if self.board_is_flipped:
+                    self.piece_animations.append((p - 0.15, p, 0, 3 // var.anim_speed, typ))
+                    self.piece_animations.append((p, p - 0.15, -3, 3 // var.anim_speed, typ))
+                else:
+                    self.piece_animations.append((p + 0.15, p, 0, 3 // var.anim_speed, typ))
+                    self.piece_animations.append((p, p + 0.15, -3, 3 // var.anim_speed, typ))
+            return None
+        self.last_choice_piece = (beach_p, self.board[beach_p])
 
     def renew_score(self):
         new_score = self.rater.score
@@ -288,13 +495,16 @@ class Game:
     #这个顺便处理UI按钮点击效果
     def process_UIs(self, pressed):
         self.UIs.clear()
-        if self.state == 'play' or self.state == 'waits':
+        if self.state in ('play', 'waits'):
             self.UIs.add((91, '!'))
             self.UIs.add((96, '&'))
             self.UIs.add((98, 'undo'))
             self.UIs.add((99, 'gret'))
             self.UIs.add((92, 'setting'))
-        if self.state == 'play' or self.state == 'wait' or self.state == 'waits':
+        if self.state in ('multiplayer', 'mltwait'):
+            self.UIs.add((96, '&'))
+            self.UIs.add((95, 'x'))
+        if self.state in ('play', 'waits', 'wait'):
             if self.board_is_flipped:
                 self.UIs.add((89, 'r' if self.ai_int else 'h'))
                 self.UIs.add((81, 'r' if self.ai_chn else 'h'))
@@ -332,7 +542,7 @@ class Game:
             self.thread_gret()
 
     # 走子模式下，棋盘上点击的操作，控制高亮路径和选中的棋子
-    def handle_board_event(self,beach_p):
+    def handle_board_event(self, beach_p):
         # 是一步走子
         if beach_p in self.highlight_paths:
             # 添加动画 并且更新 beach 状态
@@ -340,7 +550,7 @@ class Game:
             move = beach.beach2fsf(fp) + beach.beach2fsf(beach_p)
             tp = beach_p
             # 如果走子是升变
-            if self.board[fp] == 13 and tp//9 == 8:
+            if self.board[fp] == 13 and tp // 9 == 8:
                 self.state = 'promotion'
                 self.highlight_paths.clear()
                 self.promotion_move = move
@@ -353,8 +563,8 @@ class Game:
                 self.piece_animations.append((-1, tp - 18, -1, 1, 9))
                 self.piece_animations.append((-1, tp - 27, -1, 1, 8))
                 return
-            #中国象棋的升变
-            elif self.w_promotion_allowed == True and self.board[fp] == 7 and tp//9 == 0:
+            # 中国象棋的升变
+            elif self.w_promotion_allowed == True and self.board[fp] == 7 and tp // 9 == 0:
                 self.state = 'promotion'
                 self.highlight_paths.clear()
                 self.promotion_move = move
@@ -390,11 +600,11 @@ class Game:
             p, typ = beach_p, self.board[beach_p]
             if typ >= 0:
                 if self.board_is_flipped:
-                    self.piece_animations.append((p - 0.15, p, 0, 3//var.anim_speed, typ))
-                    self.piece_animations.append((p, p - 0.15, -3, 3//var.anim_speed, typ))
+                    self.piece_animations.append((p - 0.15, p, 0, 3 // var.anim_speed, typ))
+                    self.piece_animations.append((p, p - 0.15, -3, 3 // var.anim_speed, typ))
                 else:
-                    self.piece_animations.append((p + 0.15, p, 0, 3//var.anim_speed, typ))
-                    self.piece_animations.append((p, p + 0.15, -3, 3//var.anim_speed, typ))
+                    self.piece_animations.append((p + 0.15, p, 0, 3 // var.anim_speed, typ))
+                    self.piece_animations.append((p, p + 0.15, -3, 3 // var.anim_speed, typ))
             return
         self.last_choice_piece = (beach_p, self.board[beach_p])
 
@@ -489,8 +699,7 @@ class Game:
                 self.board.moves_reset(self.moves)
                 self.board.moves_reset([])
             except Exception as e:
-                logger.error(f'存档文件损坏: {e}')
-                messagebox.showerror('存档文件损坏', '存档文件损坏，请检查存档文件。')
+                msglog.error(f'存档文件损坏，请检查存档文件。\n{e}')
                 self.board.reset(force=True)
                 self.moves = []
                 self.state = 'setting'
@@ -546,11 +755,15 @@ class Game:
         """打开棋子走法设置器"""
         import tkinter as tk
         from src import ChessPieceSetup as cps
+
+        temp_root = tk.Toplevel()  # 使用Toplevel避免多根
+        temp_root.title("棋子走法设置器")
+        temp_root.geometry("750x650")
         
-        root = tk.Tk()
-        app = cps.ChessPieceSetup(root, self.eng_stg.redeclares)
-        root.mainloop()
-        
+        app = cps.ChessPieceSetup(temp_root, self.eng_stg.redeclares)
+        temp_root.wait_window()  # 模态等待
+
+        print("!!!DEBUG")
         # 处理结果
         match app.confirm:
             case True:
@@ -559,27 +772,24 @@ class Game:
                 self.eng_stg.redeclares = result_data
                 # 保存设置并应用
                 self.eng_stg.save_to_json()
-                            
+
                 # 应用引擎更改
                 var.init_fen = result_data.get('startFen') or var.INIT_FEN_DEFAULT
                 self.apply_engine_change()
-                
-                messagebox.showinfo("成功", "棋子走法设置已保存并应用！")
+
+                msglog.info("棋子走法设置已保存并应用！", title="成功")
             case False:
                 # 用户取消
-                messagebox.showinfo("取消", "设置未保存")
+                msglog.info("设置未保存", title="取消")
             case _:
-                logger.warning(f"{app.confirm =}")
-        
-        # 清理
-        root.destroy()
+                msglog.error(f"{app.confirm =}")
 
     def _apply_engine_change(self):
         self.state = 'setting_wait'
         self.eng_stg.write_to_ini()
         self.board.reboot_engine()
         self.rater.reboot()
-        
+
         # 检查是否有新的起始FEN需要应用
         new_start_fen = self.eng_stg.redeclares.get('startFen') if self.eng_stg.redeclares else None
         if new_start_fen:
@@ -587,7 +797,7 @@ class Game:
             self.board.reset(fen=new_start_fen)
             self.rater.refresh_fen(new_start_fen)
             logger.info(f"棋盘FEN已更新为: {new_start_fen}")
-        
+
         # 然后执行正常的reset逻辑
         self.reset()
         self.active_menu = main_menu

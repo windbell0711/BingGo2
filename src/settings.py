@@ -5,7 +5,7 @@ import logging
 from typing import Literal, Optional
 
 from src import variable as var
-from src.ChessPieceSetup import format_redeclares
+from src import ChessPieceSetup as cps
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ class EngineStg:
         },
     }
     swit_default = {
-        "queen_inf": 0, "white_promo": 1, "king_enter_palace": 0
+        "queen_inf": 1, "white_promo": 0, "king_enter_palace": 0
     }
     assert len(repl_dict) == len(text_dict) == len(swit_default)
 
@@ -164,9 +164,9 @@ maxRank = 9
 maxFile = 9
 
 ; Note that fen and some pieces might be declared twice
-startFen = rnbk1qnbr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
+startFen = rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
 
-customPiece1 = j:NB2RmpRcpR
+customPiece1 = j:nNB2RpR
 customPiece2 = x:B2
 customPiece3 = o:fsW
 customPiece4 = s:K
@@ -270,7 +270,7 @@ $king_enter_palace
         sub_dict: dict[str, str] = {}
         for key, value in self.switches.items():
             sub_dict[key] = EngineStg.repl_dict[key][value]
-        return self.template.substitute(**sub_dict, BLANK=format_redeclares(self.redeclares))
+        return self.template.substitute(**sub_dict, BLANK=cps.format_redeclares(self.redeclares))
     
     def write_to_ini(self) -> None:
         with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:
