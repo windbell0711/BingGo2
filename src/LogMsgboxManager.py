@@ -3,19 +3,19 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog
 from typing import Callable, Any, Optional
 
-root = tk.Tk()
-root.withdraw()  # 隐藏主窗口
-
 def noop(*args, **kwargs):
     pass
 
 class MsgLog:
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger, master: tk.Tk):
         self.logger = logger
-    
+        # 动态获取或创建主窗口
+        self.master = master
+        self.master.withdraw()  # 确保主窗口隐藏
+        
     def topmost_msgbox(self, func_msg: Callable, func_log: Callable,
                        title: str, msg: str) -> Any:
-        temp = tk.Toplevel(root)  # 创建一个临时窗口作为容器
+        temp = tk.Toplevel(self.master)  # 使用传入的主窗口
         temp.withdraw()
         temp.attributes('-topmost', True)
         def make_topmost(event):
@@ -25,9 +25,9 @@ class MsgLog:
 
         func_log(msg)
         ret = func_msg(title, msg, parent=temp)
-        temp.destroy()  # 弹窗关闭后销毁临时窗口
+        temp.destroy()
         return ret
-    
+ 
     def debug(self, msg: str, title="调试", box=True, log=True) -> None:
         self.topmost_msgbox(messagebox.showinfo if box else noop,
                             self.logger.debug if log else noop, title, msg)

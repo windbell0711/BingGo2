@@ -9,11 +9,12 @@ import time
 import logging
 from typing import Dict, Optional, Any, Literal
 
+from src import variable as var
 from src.consts import ACCESS_TOKEN
 from src.LogMsgboxManager import MsgLog
 
 logger = logging.getLogger(__name__)
-msglog = MsgLog(logger)
+msglog = MsgLog(logger, var.root)
 
 
 class Gist:

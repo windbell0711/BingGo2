@@ -203,6 +203,7 @@ class ChessPieceSetup:
         self.confirm = False
         self.running = False
         self.root.quit()
+        self.root.destroy()
     
     def on_confirm(self):
         result = {k: v.get() for k, (v, _, _) in self.entries.items() if self.check_vars[k].get()}
@@ -234,6 +235,7 @@ class ChessPieceSetup:
         print(f"更改的数据: {result}")
         self.running = False
         self.root.quit()
+        self.root.destroy()
 
 
 if __name__ == "__main__":

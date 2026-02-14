@@ -16,7 +16,7 @@ from src.settings import EngineStg
 from src.LogMsgboxManager import MsgLog
 
 logger = logging.getLogger(__name__)
-msglog = MsgLog(logger)
+msglog = MsgLog(logger, var.root)
 
 
 main_menu = Menu([
@@ -754,10 +754,14 @@ class Game:
         import tkinter as tk
         from src import ChessPieceSetup as cps
 
-        root = tk.Tk()
-        app = cps.ChessPieceSetup(root, self.eng_stg.redeclares)
-        root.mainloop()
+        temp_root = tk.Toplevel()  # 使用Toplevel避免多根
+        temp_root.title("棋子走法设置器")
+        temp_root.geometry("750x650")
+        
+        app = cps.ChessPieceSetup(temp_root, self.eng_stg.redeclares)
+        temp_root.wait_window()  # 模态等待
 
+        print("!!!DEBUG")
         # 处理结果
         match app.confirm:
             case True:
@@ -777,9 +781,6 @@ class Game:
                 msglog.info("设置未保存", title="取消")
             case _:
                 msglog.error(f"{app.confirm =}")
-
-        # 清理
-        root.destroy()
 
     def _apply_engine_change(self):
         self.state = 'setting_wait'

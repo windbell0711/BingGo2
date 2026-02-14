@@ -10,7 +10,7 @@ from src.LogMsgboxManager import MsgLog
 game = gm.Game()
 
 logger = logging.getLogger(__name__)
-msglog = MsgLog(logger)
+msglog = MsgLog(logger, var.root)
 
 # import ctypes
 # if sys.platform == 'win32':
