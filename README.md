@@ -58,11 +58,9 @@ A completely rewritten version of BingGo.
 
 **目前最新版本：BingGo v2.2.0 pk_version**
 
-gitee下载：
+gitee下载：[推荐版本](https://gitee.com/windbell0711/BingGo2/releases/download/v2.2.0/BingGo_v2.2.0.zip)
 
-蓝奏云下载：
-
-所有发行版：[BingGo2/releases/](https://gitee.com/windbell0711/BingGo2/releases/)
+所有发行版：[BingGo2/releases](https://gitee.com/windbell0711/BingGo2/releases/)
 
 
 ## 支持
@@ -74,4 +72,4 @@ gitee下载：
 
 *Powered by [FairyStockFish](https://fairy-stockfish.github.io/).*
 
-*[pygame-ce](https://pyga.me/docs/index.html)*
+*Hello, [pygame-ce](https://pyga.me/docs/index.html).*
