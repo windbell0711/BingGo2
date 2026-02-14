@@ -14,7 +14,7 @@ def format_redeclares(redeclares: dict[str, str]) -> str:
 class ChessPieceSetup:
     blank_default = {
         'startFen': 'rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1',
-        'customPiece1': 'j:NB2RmpRcpR', 
+        'customPiece1': 'j:nNB2RpR', 
         'customPiece2': 'x:B2', 
         'customPiece3': 'o:fsW',
         'customPiece4': 's:K', 

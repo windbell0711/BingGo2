@@ -64,8 +64,8 @@ engine_setting = Menu([
         '允许国王进入九宫':   'self.set_eng_stg("king_enter_palace", 1)',
     }),
     SettingBtn("queen_inf", cmds={
-        '皇后移动长度不能大于三':      'self.set_eng_stg("queen_inf", 0)',
-        '皇后原本走法':   'self.set_eng_stg("queen_inf", 1)',
+        '皇后移动距离不能大于三': 'self.set_eng_stg("queen_inf", 0)',
+        '皇后沿直线斜线无限移动': 'self.set_eng_stg("queen_inf", 1)',
         # '自定义皇后走法(实验)':        'self.set_eng_stg("queen_inf", 2)',
     }),
     PressBtn("更多规则设置...(实验)", cmd='self.open_chess_piece_setup()', rect=(0.25,0.8,0.5,0.05)),  # 添加新的按钮

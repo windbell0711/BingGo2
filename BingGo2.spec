@@ -24,7 +24,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='BingGo_v2.1.0',  # Name
+    name='BingGo_v2.2.0',  # Name
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

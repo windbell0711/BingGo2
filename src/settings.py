@@ -154,7 +154,7 @@ class EngineStg:
         },
     }
     swit_default = {
-        "queen_inf": 0, "white_promo": 1, "king_enter_palace": 0
+        "queen_inf": 1, "white_promo": 0, "king_enter_palace": 0
     }
     assert len(repl_dict) == len(text_dict) == len(swit_default)
 
@@ -166,7 +166,7 @@ maxFile = 9
 ; Note that fen and some pieces might be declared twice
 startFen = rbnk1qbnr/pppp1pppp/9/9/9/O1O1O1O1O/1A5A1/9/CMXSWSXMC w kq - 0 1
 
-customPiece1 = j:NB2RmpRcpR
+customPiece1 = j:nNB2RpR
 customPiece2 = x:B2
 customPiece3 = o:fsW
 customPiece4 = s:K
