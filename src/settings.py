@@ -138,9 +138,26 @@ class EngineStg:
             1: "",
         },
     }
+    text_dict: dict[str, dict[int, str]] = {
+        "皇后最远移动距离": {
+            0: "不超过三",
+            1: "无限",
+            # 2: "WDHFNCAZG",
+        },
+        "中国象棋中卒的升变": {
+            0: "禁止",
+            1: "底线升变",
+        },
+        "国象中王进入九宫": {
+            0: "不允许",
+            1: "允许",
+        },
+    }
     swit_default = {
         "queen_inf": 0, "white_promo": 1, "king_enter_palace": 0
     }
+    assert len(repl_dict) == len(text_dict) == len(swit_default)
+
     ini_template = """
 [binggo]
 maxRank = 9
@@ -175,6 +192,8 @@ promotionRegionBlack = *1
 enPassantRegion = -
 
 castling = true
+castlingKingPiece = k
+castlingRookPiece = r
 castlingKingFile = d
 castlingKingsideFile = f
 castlingRookKingsideFile = i
@@ -232,6 +251,12 @@ $king_enter_palace
         _ = json.loads(f)
         self.switches   = _.get('switches')   or EngineStg.swit_default
         self.redeclares = _.get('redeclares') or {}
+
+    def export_to_json(self) -> str:
+        return json.dumps({
+            'switches': self.switches,
+            'redeclares': self.redeclares,
+        })
     
     def save_to_json(self) -> None:
         if not os.path.exists('userdata'):  os.mkdir('userdata')
@@ -250,10 +275,12 @@ $king_enter_palace
     def write_to_ini(self) -> None:
         with open('engine\\binggo.ini', 'w', encoding='UTF-8') as f:
             f.write(self.export_to_ini())
-
-    # def export_to_json(self, with_json: Optional[dict] = None) -> str:
-    #     if with_json is None:  with_json = {}
-    #     return json.dumps({'switches': self.switches} | with_json)
+    
+    def export_to_text(self) -> str:
+        return "基本规则:\n" + ",\n".join([
+            f"  {k}: {d[opt]}" for (_, opt), (k, d) in 
+                zip(self.switches.items(), EngineStg.text_dict.items())
+        ]) + "." + "\n\n实验修改: " + json.dumps(self.redeclares, indent=2)
 
 
 if __name__ == '__main__':

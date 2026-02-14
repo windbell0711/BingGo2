@@ -1,15 +1,16 @@
 import logging
 import pygame
 import sys, os, webbrowser, time
-from tkinter import messagebox
 
 from src import game as gm
 from src import variable as var
 from src import consts
+from src.LogMsgboxManager import MsgLog
 
 game = gm.Game()
 
 logger = logging.getLogger(__name__)
+msglog = MsgLog(logger)
 
 # import ctypes
 # if sys.platform == 'win32':
@@ -58,14 +59,14 @@ def play():
     if os.path.exists(path:='binggo.log'):
         # 询问是否打开帮助
         if time.time() - os.path.getctime(path) < 60:  # 检查文件是否在一分钟内创建
-            if messagebox.askyesno('提示', '欢迎来到BingGo！\n是否需要打开帮助？如果否，你可以稍后在游戏设置中找到帮助。'):
+            if msglog.askyesno('欢迎来到BingGo！\n是否需要打开帮助？如果否，你可以稍后在游戏设置中找到帮助。', '提示'):
                 webbrowser.open('https://gitee.com/windbell0711/BingGo2/blob/main/README.md')
         # 询问是否清理log文件
-        if os.path.getsize(path) > 1024 * 256:  # 检查log文件大小是否超过限制
-            if messagebox.askyesno('提示', '游戏日志文件过大，是否自动清理？（建议）'):
+        if os.path.getsize(path) > 1024 * 128:  # 检查log文件大小是否超过限制
+            if msglog.askyesno('游戏日志文件过大，是否自动清理？（建议）', '提示'):
                 with open('binggo.log', 'w', encoding='utf-8') as f:
                     f.write('')
-                logger.info('binggo.log大小超过256KB，经用户同意已清理游戏日志文件')
+                logger.info('binggo.log大小超过128KB，经用户同意已清理游戏日志文件')
 
     try:
         with open('userdata\\display_setting.ini', 'r', encoding='ascii') as f:
@@ -137,7 +138,7 @@ def play():
         bar_img_original = pygame.Surface((1, 1))
         img_loss = True
 
-    all_piece_img_names = ['empty_piece','shadow','!','&','undo','gret','h','r',
+    all_piece_img_names = ['empty_piece','shadow','!','&', 'x','undo','gret','h','r',
                            'pressed','dot','empty_button','setting','empty_piece']
 
     name2piece_original_surface = {}
@@ -151,8 +152,8 @@ def play():
     try:
         font = pygame.font.Font(FONT, 500)
     except FileNotFoundError:
-        messagebox.showerror('警告','字体文件缺失。你可以重新下载游戏解决此问题。')
-        raise FileNotFoundError
+        msglog.error('字体文件缺失。你可以重新下载游戏解决此问题。')
+        raise
     for typ, name in zip(n2c.keys(),n2c.values()):
         try:
             name2piece_original_surface[name] = pygame.image.load(f'{IMG_SOURCE}/{name}.png').convert_alpha()
@@ -164,7 +165,7 @@ def play():
     background_and_board = board_image = background_image = pieces = small_screen = settings = bar_img = pygame.Surface((0,0))
 
     if img_loss:
-        messagebox.showerror('警告', '缺失图片文件，游戏依旧可以运行。你可以重新下载游戏解决此问题。')
+        msglog.warning('缺失图片文件，游戏依旧可以运行。你可以重新下载游戏解决此问题。')
     del img_loss
 
     pygame.display.set_icon(name2piece_original_surface['帅'])
